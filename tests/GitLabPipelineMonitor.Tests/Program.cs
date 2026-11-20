@@ -30,7 +30,8 @@ public static class Program
             ("错误信息提取", ErrorTests.Run),
             ("格式化", FormatTests.Run),
             ("本地化", LocTests.Run),
-            ("状态编排", StateTests.Run)
+            ("状态编排", StateTests.Run),
+            ("真实 GitHub Release 数据", LiveReleaseTests.Run)
         };
 
         var stopwatch = Stopwatch.StartNew();

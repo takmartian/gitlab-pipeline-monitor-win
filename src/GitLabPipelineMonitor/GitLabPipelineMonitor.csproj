@@ -15,6 +15,10 @@
     <Version>1.0.0</Version>
     <!-- 在 macOS / Linux 上也能构建和交叉发布（这个项目就是这么做的） -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- 默认发布成框架依赖版（见 build.sh）：包只有几 MB，运行时由用户装。
+         缺运行时时 Windows 的 apphost 会自己弹框，带你去下载 .NET 8 Desktop Runtime。
+         确实需要把 .NET 一起打包时，用 build.sh 的自包含开关（见脚本开头说明）。 -->
+    <UseAppHost>true</UseAppHost>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 

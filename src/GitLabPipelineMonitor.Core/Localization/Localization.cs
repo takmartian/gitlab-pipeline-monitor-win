@@ -155,6 +155,9 @@ internal static class English
         ["触发方式"] = "Triggered by",
         ["开始时间"] = "Started",
         ["结束时间"] = "Finished",
+        ["名称"] = "Name",
+        ["创建时间"] = "Created",
+        ["更新时间"] = "Updated",
         ["重跑流水线"] = "Retry pipeline",
         ["停止流水线"] = "Cancel pipeline",
         ["打开流水线页面"] = "Open pipeline page",
@@ -189,6 +192,8 @@ internal static class English
         ["服务器"] = "Server",
         ["GitLab 版本"] = "GitLab version",
         ["登录用户"] = "Signed in as",
+        ["令牌账户"] = "Token account",
+        ["已配置"] = "Configured",
 
         // 设置 - 项目
         ["仅监控星标项目"] = "Starred projects only",
@@ -220,8 +225,12 @@ internal static class English
         ["每 5 分钟"] = "Every 5 minutes",
         ["每 10 分钟"] = "Every 10 minutes",
         ["面板宽度"] = "Panel width",
+        ["托盘图标"] = "Tray icon",
+        ["忽略版本"] = "Ignored version",
         ["面板高度"] = "Panel height",
         ["通知已在系统设置中关闭，Windows 一般不会拦截托盘气泡，但专注 assist 状态可能不显示。"] = "Windows rarely blocks tray balloons, but they stay hidden while do-not-disturb is on.",
+
+        ["版本 {0} ({1})"] = "Version {0} ({1})",
 
         // 设置 - 关于
         ["关于"] = "About",

@@ -8,8 +8,13 @@
 
 ## 下载
 
-预构建包在 [Releases](https://github.com/takmartian/gitlab-pipeline-monitor-win/releases/latest)：
-一个自包含的 `GitLabPipelineMonitor.exe`，**不需要安装 .NET 运行时**，双击即可运行。
+预构建包在 [Releases](https://github.com/takmartian/gitlab-pipeline-monitor-win/releases/latest)，
+解压后双击 `GitLabPipelineMonitor.exe` 即可运行。
+
+程序是**框架依赖**的，需要 [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
+（微软官方运行时，几百 MB 的程序里只占几 MB 的包体积）。
+如果机器上没装，双击 exe 时 Windows 会自己弹框提示并带你去下载，点几下就装好了。
+已经装了 .NET 8 桌面运行时的机器（很多开发机和装过 Visual Studio / Office 的机器都有）直接就能跑。
 
 exe 未做代码签名，首次运行 Windows SmartScreen 可能提示「未知发布者」，
 点「更多信息 → 仍要运行」即可（只影响第一次）。
@@ -73,9 +78,10 @@ Windows 凭据管理器 / DPAPI 在 .NET 里是独立的 NuGet 包，会破掉�
 需要 [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)。在 macOS / Linux / Windows 上都能构建：
 
 ```bash
-./build.sh              # 发布 win-x64 自包含单文件并打包 zip
-./build.sh debug        # 调试构建
-dotnet test             # 跑逻辑测试（零依赖自研 runner，可在任意平台跑）
+./build.sh                  # 发布 win-x64 框架依赖版并打包 zip（默认）
+./build.sh --self-contained # 需要把 .NET 一起打包时才用（包会从几 MB 变成 100MB+）
+./build.sh debug            # 调试构建
+dotnet test                 # 跑逻辑测试（零依赖自研 runner，可在任意平台跑）
 ```
 
 项目分三层，`Core` 不依赖任何 Windows 专有 API，所以全部业务逻辑都能在 macOS 上编译和测试：

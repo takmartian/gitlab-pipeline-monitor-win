@@ -214,16 +214,16 @@ public sealed class TrayIcon : IDisposable
 
     public void ShowPanel()
     {
-        var trayLocation = _icon.Location ?? new System.Drawing.Point(
-            System.Windows.SystemParameters.WorkArea.Right - 120, System.Windows.SystemParameters.WorkArea.Bottom - 40);
         var width = _settings.PanelWidth;
         var height = _settings.PanelHeight;
 
-        // 面板右上角对齐托盘图标右上角，靠左上展开
-        var left = trayLocation.X - width + 8;
-        var top = trayLocation.Y - height + 4;
-
+        // .NET 8 的 NotifyIcon 拿不到图标在屏幕上的坐标（只有 Win11 通知区才有，且不可编程获取），
+        // 所以贴着工作区右下角展开 —— 这也是托盘面板最常见的落点。
         var workArea = System.Windows.SystemParameters.WorkArea;
+        var left = workArea.Right - width;
+        var top = workArea.Bottom - height;
+
+        // 显示器缩放或工作区变化时兜一下，别让面板跑到屏幕外
         left = Math.Clamp(left, workArea.Left + 4, Math.Max(workArea.Left + 4, workArea.Right - width - 4));
         top = Math.Clamp(top, workArea.Top + 4, Math.Max(workArea.Top + 4, workArea.Bottom - height - 4));
 

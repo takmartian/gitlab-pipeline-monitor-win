@@ -1,13 +1,22 @@
 GitLab Pipeline Monitor for Windows
 
-这是一个绿色单文件程序，不需要安装，双击 GitLabPipelineMonitor.exe 即可运行。
+解压后双击 GitLabPipelineMonitor.exe 即可运行，不需要安装程序。
 
-运行后程序出现在屏幕右下角的系统托盘里（Win11 可能折叠在「显示隐藏的图标」箭头里）。
+【需要 .NET 8 桌面运行时】
+程序是框架依赖的，包里没有塞 .NET（所以只有几 MB）。
+如果这台机器还没装 .NET 8 Desktop Runtime，双击 exe 时 Windows 会自己弹框提示，
+点框里的下载按钮（或去 https://dotnet.microsoft.com/download/dotnet/8.0），
+选 「Runtime → .NET 8 Desktop Runtime x64」 下载安装，装完再双击 exe 就行。
+已经装过 Visual Studio、Office 或别的 .NET 程序的机器，很可能已经有了，直接就能跑。
+
+【首次运行的 SmartScreen 提示】
+程序没有购买代码签名证书，第一次运行 Windows 可能提示「未知发布者」或蓝色拦截页。
+点「更多信息」→「仍要运行」即可，只影响第一次，不代表程序有问题。
+
+【运行后在哪】
+程序出现在屏幕右下角的系统托盘里（Win11 可能折叠在「显示隐藏的图标」箭头里）。
 左键点击托盘图标打开面板，右键可以刷新、进设置、检查更新、退出。
 
-如果 Windows 提示「未知发布者」或 SmartScreen 拦截：
-  点「更多信息」→「仍要运行」即可，只影响第一次。
-  这是因为程序没有购买代码签名证书，不代表程序有问题。
-
-程序不需要安装 .NET 运行时（已自包含）。
-你的令牌加密保存在 %APPDATA%\GitLab Pipeline Monitor\ 下，不会写进配置文件。
+【数据在哪】
+设置：%APPDATA%\GitLab Pipeline Monitor\settings.json
+令牌：%APPDATA%\GitLab Pipeline Monitor\tokens.json（AES-GCM 加密，密钥来自本机 MachineGuid + 你的登录名）

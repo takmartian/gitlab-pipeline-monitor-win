@@ -1,0 +1,171 @@
+<UserControl x:Class="GitLabPipelineMonitor.RunPipelineView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource PanelBackgroundBrush}"
+             TextOptions.TextFormattingMode="Display" UseLayoutRounding="True">
+
+    <UserControl.Resources>
+        <!-- 分支行容器：平时透明，悬停淡底，选中用强调色描边 + 淡底（Windows 原生观感） -->
+        <Style x:Key="BranchItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Box" CornerRadius="6" Padding="7,5" Margin="0,1"
+                                Background="Transparent" BorderThickness="1" BorderBrush="Transparent">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="{StaticResource RowHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="{StaticResource FieldBackgroundBrush}" />
+                                <Setter TargetName="Box" Property="BorderBrush"
+                                        Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 分支行：图标 + 名称 + 默认分支标记 +（选中时）对勾 -->
+        <DataTemplate x:Key="BranchTemplate">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Viewbox Grid.Column="0" Width="9" Height="9" Margin="0,0,6,0" VerticalAlignment="Center">
+                    <Path Fill="{StaticResource SecondaryTextBrush}" Data="{StaticResource Icon.Branch}" />
+                </Viewbox>
+                <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="11" MaxWidth="190" TextTrimming="CharacterEllipsis"
+                           Foreground="{StaticResource PanelForegroundBrush}" VerticalAlignment="Center" />
+                <Border Grid.Column="2" Margin="5,0,0,0" CornerRadius="4" Padding="4,1" VerticalAlignment="Center"
+                        Background="{StaticResource FieldBackgroundBrush}"
+                        Visibility="{Binding ShowDefaultBadge, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="{Binding DefaultLabel}" FontSize="9" FontWeight="Medium"
+                               Foreground="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+                </Border>
+                <Path Grid.Column="4" Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center"
+                      Fill="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" Data="{StaticResource Icon.CheckCircle}"
+                      Visibility="{Binding IsSelected, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}, Converter={StaticResource BoolToVis}}" />
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ===== 顶栏：返回 + 标题 ===== -->
+        <Grid Grid.Row="0" Background="{StaticResource BarBackgroundBrush}" Margin="10,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button x:Name="BackBtn" Grid.Column="0" Style="{StaticResource IconButton}" Width="24" Height="22"
+                    HorizontalAlignment="Left" Click="Back_Click">
+                <Viewbox Width="12" Height="12">
+                    <Path Fill="{StaticResource PanelForegroundBrush}" Data="{StaticResource Icon.ChevronRight}"
+                          RenderTransformOrigin="0.5,0.5">
+                        <Path.RenderTransform>
+                            <RotateTransform Angle="180" />
+                        </Path.RenderTransform>
+                    </Path>
+                </Viewbox>
+            </Button>
+            <StackPanel Grid.Column="1" Margin="6,0,0,0" VerticalAlignment="Center">
+                <TextBlock x:Name="TitleText" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource PanelForegroundBrush}" />
+                <TextBlock x:Name="PathText" FontSize="9" TextTrimming="CharacterEllipsis"
+                           Foreground="{StaticResource TertiaryTextBrush}" />
+            </StackPanel>
+        </Grid>
+
+        <Border Grid.Row="1" Height="1" Background="{StaticResource HairlineBrush}" />
+
+        <!-- ===== 主体：搜索 + 分支列表 ===== -->
+        <Grid Grid.Row="2" Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,7">
+                <TextBox x:Name="SearchBox" Style="{StaticResource SearchBox}" Padding="26,4,22,4"
+                         TextChanged="Search_TextChanged" />
+                <Viewbox Width="11" Height="11" HorizontalAlignment="Left" Margin="8,0,0,0">
+                    <Path Fill="{StaticResource TertiaryTextBrush}" Data="{StaticResource Icon.Search}" />
+                </Viewbox>
+                <TextBlock x:Name="Placeholder" FontSize="12" Margin="26,0,0,0" VerticalAlignment="Center"
+                           Foreground="{StaticResource TertiaryTextBrush}" IsHitTestVisible="False" />
+                <Button Width="18" Height="18" HorizontalAlignment="Right" Margin="0,0,5,0"
+                        Style="{StaticResource IconButton}" Click="ClearSearch_Click">
+                    <Viewbox Width="10" Height="10">
+                        <Path Fill="{StaticResource TertiaryTextBrush}" Data="{StaticResource Icon.Close}" />
+                    </Viewbox>
+                </Button>
+            </Grid>
+
+            <Grid Grid.Row="1">
+                <ListBox x:Name="BranchList" BorderThickness="0" Background="Transparent" Padding="0"
+                         HorizontalContentAlignment="Stretch"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ItemContainerStyle="{StaticResource BranchItemStyle}" ItemTemplate="{StaticResource BranchTemplate}"
+                         SelectionChanged="BranchList_SelectionChanged" MouseDoubleClick="BranchList_MouseDoubleClick"
+                         Visibility="Collapsed" />
+
+                <StackPanel x:Name="LoadingPanel" Orientation="Horizontal" Margin="2,12,0,0" Visibility="Collapsed">
+                    <ProgressBar Width="14" Height="14" IsIndeterminate="True" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <TextBlock x:Name="LoadingText" FontSize="11" Foreground="{StaticResource SecondaryTextBrush}"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+
+                <Grid x:Name="ErrorPanel" Margin="2,12,0,0" VerticalAlignment="Top" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Viewbox Width="10" Height="10" Margin="0,2,5,0" VerticalAlignment="Top">
+                        <Path Fill="{StaticResource BlockedBrush}" Data="{StaticResource Icon.Alert}" />
+                    </Viewbox>
+                    <TextBlock x:Name="ErrorText" Grid.Column="1" FontSize="10" TextWrapping="Wrap"
+                               Foreground="{StaticResource SecondaryTextBrush}" />
+                    <Button x:Name="ErrorRetryBtn" Grid.Column="2" FontSize="11" Padding="8,2" Margin="6,0,0,0"
+                            VerticalAlignment="Top" Click="RetryLoad_Click" />
+                </Grid>
+
+                <TextBlock x:Name="EmptyText" FontSize="11" Foreground="{StaticResource TertiaryTextBrush}"
+                           HorizontalAlignment="Center" Margin="0,12,0,0" Visibility="Collapsed" />
+            </Grid>
+        </Grid>
+
+        <Border Grid.Row="3" Height="1" Background="{StaticResource HairlineBrush}" />
+
+        <!-- ===== 底部操作 ===== -->
+        <Grid Grid.Row="4" Background="{StaticResource BarBackgroundBrush}" Margin="10,6">
+            <Button x:Name="CancelBtn" HorizontalAlignment="Left" FontSize="11" Padding="10,3" IsCancel="True"
+                    Click="Cancel_Click" />
+            <Button x:Name="RunBtn" HorizontalAlignment="Right" Style="{StaticResource AccentButtonStyle}"
+                    IsDefault="True" Click="Run_Click">
+                <StackPanel Orientation="Horizontal">
+                    <Viewbox Width="9" Height="9" Margin="0,0,5,0">
+                        <Path Fill="White" Data="{StaticResource Icon.Play}" />
+                    </Viewbox>
+                    <TextBlock x:Name="RunBtnText" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </Grid>
+    </Grid>
+</UserControl>

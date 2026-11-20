@@ -112,7 +112,7 @@ public partial class PanelWindow : Window
     private void OpenGitLab_Click(object sender, RoutedEventArgs e)
     {
         var host = _state.DemoHost is null ? _settings.NormalizedBaseUrl : "https://" + _state.DemoHost;
-        ((App)Application.Current).GetHost().OpenUrl(host);
+        if (!string.IsNullOrEmpty(host)) ((App)Application.Current).GetHost().OpenUrl(host!);
     }
 
     // MARK: - 项目分组
@@ -223,10 +223,9 @@ public partial class PanelWindow : Window
     /// <summary>ContextMenu 的 DataContext 挂在 PlacementTarget 上，取法和平时的按钮不同。</summary>
     private Pipeline? MenuItemPipeline(object sender)
     {
-        if (sender is not MenuItem { DataContext: Pipeline pipeline })
-            // ContextMenu 里的元素继承的是 PlacementTarget 的 DataContext
-            pipeline = (sender as FrameworkElement)?.DataContext as Pipeline;
-        return pipeline;
+        if (sender is MenuItem { DataContext: Pipeline pipeline }) return pipeline;
+        // ContextMenu 里的元素继承的是 PlacementTarget 的 DataContext
+        return (sender as FrameworkElement)?.DataContext as Pipeline;
     }
 
     // MARK: - 覆盖层

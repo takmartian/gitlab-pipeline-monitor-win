@@ -67,18 +67,18 @@ public sealed class UpdateManager : ObservableObject, IDisposable
     /// <summary>启动后延迟几秒查一次，之后每 6 小时看一眼（本地缓存 24 小时，不会碰限流）。</summary>
     public void Start()
     {
-        _ = Task.Delay(TimeSpan.FromSeconds(4)).ContinueWith(_ =>
-            System.Windows.Application.Current.Dispatcher.InvokeAsync(() => CheckAsync(force: false)));
+        _ = Task.Delay(TimeSpan.FromSeconds(4)).ContinueWith(async _ =>
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() => CheckAsync(force: false)));
 
         _timer = new DispatcherTimer { Interval = TimeSpan.FromHours(6) };
-        _timer.Tick += (_, _) => CheckAsync(force: false);
+        _timer.Tick += async (_, _) => await CheckAsync(force: false);
         _timer.Start();
 
         // 刚把开关打开就顺手查一次，不用等下一个周期
         _settings.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(AppSettings.AutoUpdateEnabled) && _settings.AutoUpdateEnabled)
-                CheckAsync(force: false);
+                _ = CheckAsync(force: false);
         };
     }
 
@@ -381,8 +381,8 @@ public sealed class UpdateManager : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        // DispatcherTimer 不实现 IDisposable，停掉即可
         _timer?.Stop();
-        _timer?.Dispose();
         _http.Dispose();
     }
 }

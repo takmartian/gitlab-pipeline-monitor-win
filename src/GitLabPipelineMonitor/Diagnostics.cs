@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using GitLabPipelineMonitor.Core;
+using GitLabPipelineMonitor.Core.GitLab;
 using GitLabPipelineMonitor.Core.Localization;
 using GitLabPipelineMonitor.Core.Storage;
 using GitLabPipelineMonitor.Core.Update;
@@ -182,9 +183,9 @@ public static class Diagnostics
         Check("同版本不算新", !AppVersion.IsNewer("1.2.3", "1.2.3"));
         Check("markdown 去分隔线", !UpdateNotes.Plain("a\n\n---\n\nb").Contains("---", StringComparison.Ordinal));
         Check("markdown 展开链接", UpdateNotes.Plain("[x](u)").Contains("x (u)", StringComparison.Ordinal));
-        Check("运行中算在跑", GitLab.PipelineStatus.Running.IsActive());
-        Check("成功不算在跑", !GitLab.PipelineStatus.Success.IsActive());
-        Check("失败可重跑", GitLab.PipelineStatus.Failed.CanRetry());
+        Check("运行中算在跑", PipelineStatus.Running.IsActive());
+        Check("成功不算在跑", !PipelineStatus.Success.IsActive());
+        Check("失败可重跑", PipelineStatus.Failed.CanRetry());
         Check("英文查表", Loc.T("刷新") == "Refresh" || Loc.Language != AppLanguage.En);
         Check("时长格式化", Fmt.Duration(192) == "3m 12s");
         Check("相对时间不为空", Fmt.Relative(DateTime.Now.AddMinutes(-5)).Length > 0);
@@ -253,7 +254,7 @@ public static class Diagnostics
             _ => Views.SettingsTab.Connection
         });
         // ShowSettings 打开的是应用持有的那个窗口，这里取回来抓
-        return Application.Current.Windows.OfType<SettingsWindow>().FirstOrDefault()
+        return Application.Current.Windows.OfType<Views.SettingsWindow>().FirstOrDefault()
                ?? new Window { Width = 620, Height = 560, Title = "设置" };
     }
 }
