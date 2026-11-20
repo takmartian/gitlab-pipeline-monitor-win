@@ -1,0 +1,12 @@
+<Project>
+  <!-- 全仓库统一的编译设置；零 NuGet 依赖，restore 只取 SDK 自带的引用包 -->
+  <PropertyGroup>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <NoWarn>$(NoWarn);CA1416;CA1720</NoWarn>
+    <!-- CA1720：标识符含类型名。GitLabJson 的 Int/Double/Object 是取值方法的自然命名，改名要动十几处调用点，收益低 -->
+  </PropertyGroup>
+</Project>

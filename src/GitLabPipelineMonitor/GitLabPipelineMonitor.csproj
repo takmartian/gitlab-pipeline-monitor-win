@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>GitLabPipelineMonitor</RootNamespace>
+    <AssemblyName>GitLabPipelineMonitor</AssemblyName>
+    <UseWPF>true</UseWPF>
+    <!-- 托盘图标用 WinForms 的 NotifyIcon：它是 .NET 自带的，不算第三方依赖 -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Version>1.0.0</Version>
+    <!-- 在 macOS / Linux 上也能构建和交叉发布（这个项目就是这么做的） -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 同时启用 WPF 和 WinForms（只为了托盘的 NotifyIcon）时，隐式 using 会让
+         Application / Brush / Color / Point / UserControl 这些同名类型变成二义性。
+         这里把 WinForms 与 System.Drawing 的全局 using 去掉，只有 TrayIcon.cs 显式导入它们。 -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GitLabPipelineMonitor.Core\GitLabPipelineMonitor.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
+  </ItemGroup>
+</Project>

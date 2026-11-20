@@ -1,0 +1,17 @@
+bin/
+obj/
+artifacts/
+*.user
+*.suo
+.vs/
+.vscode/
+*.log
+TestResults/
+*.aps
+*.plg
+# 构建产物
+publish/
+artifacts/
+*.nupkg
+# 本地令牌加密文件（不应进仓库）
+tokens.json

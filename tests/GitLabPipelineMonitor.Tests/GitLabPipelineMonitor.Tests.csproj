@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>GitLabPipelineMonitor.Tests</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- 测试也不引 NuGet：零依赖是这个项目的底线，测试框架同样遵守 -->
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/GitLabPipelineMonitor.Core/GitLabPipelineMonitor.Core.csproj" />
+  </ItemGroup>
+</Project>
