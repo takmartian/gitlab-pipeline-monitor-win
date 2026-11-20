@@ -57,7 +57,7 @@
                         </Trigger>
                         <!-- 选中态用系统强调色底 + 描边，符合 Windows 原生观感 -->
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Pill" Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightColorKey}}" />
+                            <Setter TargetName="Pill" Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

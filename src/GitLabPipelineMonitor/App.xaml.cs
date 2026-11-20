@@ -24,6 +24,9 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // 越早装越好：连启动阶段的错误也要能留下现场，而不是弹系统崩溃框
+        CrashGuard.Install(new WindowsHost());
+
         // 单实例：已经在跑就把已有面板叫到前台，不要开第二份托盘图标
         _instanceMutex = new System.Threading.Mutex(true, "GitLabPipelineMonitor_SingleInstance", out var createdNew);
         if (!createdNew)
@@ -36,7 +39,7 @@ public partial class App : Application
 
         _host = new WindowsHost();
         AppInfo.Version = GetType().Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
-        AppInfo.Build = "1";
+        AppInfo.Build = "2";
 
         _settings = new AppSettings(_host);
         Loc.Language = _settings.Language;
