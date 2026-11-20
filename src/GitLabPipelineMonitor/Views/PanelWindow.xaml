@@ -56,8 +56,6 @@
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <!-- 底边把手：按住上下拖改面板高度，双击恢复默认 -->
-                <RowDefinition Height="8" />
             </Grid.RowDefinitions>
 
             <!-- ===== 顶栏 ===== -->
@@ -427,17 +425,22 @@
                 </Button>
             </Grid>
 
-            <!-- 底边拖拽把手：平时看不见，鼠标移上去显出一条短线提示 -->
-            <Border Grid.Row="6" x:Name="ResizeGrip" Background="Transparent" Cursor="SizeNS"
+            <!-- 顶边拖拽把手：平时看不见，鼠标悬停时显示一条居中的细圆角条提示。
+                 Windows 任务栏默认在底部，面板向上展开，自由边是顶边；
+                 若检测到任务栏在顶部，代码会把热区挪到底边（远离任务栏的那条边）。
+                 热区只占最外 6px，顶栏控件从 margin 8 开始，可点区域不受影响。 -->
+            <Border Grid.RowSpan="6" x:Name="ResizeGrip" Height="6" VerticalAlignment="Top"
+                    Background="Transparent" Cursor="SizeNS"
                     MouseLeftButtonDown="Grip_MouseDown" MouseMove="Grip_MouseMove"
                     MouseLeftButtonUp="Grip_MouseUp" MouseLeave="Grip_MouseLeave"
-                    ToolTip="拖动底边调整高度，双击恢复默认">
-                <Border x:Name="GripMark" Width="34" Height="3" CornerRadius="2" Opacity="0"
-                        Background="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                    ToolTip="拖动顶边调整高度，双击恢复默认">
+                <Border x:Name="GripMark" Width="40" Height="4" CornerRadius="2" Opacity="0"
+                        Background="{StaticResource TertiaryTextBrush}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Border>
 
             <!-- 覆盖层：流水线详情 / 运行流水线 -->
-            <Grid x:Name="OverlayHost" Grid.Row="0" Grid.RowSpan="7" Background="{StaticResource PanelBackgroundBrush}"
+            <Grid x:Name="OverlayHost" Grid.Row="0" Grid.RowSpan="6" Background="{StaticResource PanelBackgroundBrush}"
                   Visibility="Collapsed" />
 
             <!-- 操作反馈 toast -->

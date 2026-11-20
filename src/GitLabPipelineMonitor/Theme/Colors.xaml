@@ -1,7 +1,8 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- 状态色：取值与 macOS 版逐一对齐，两端看到的颜色应当一致 -->
+    <!-- 状态色：浅色取值与 macOS 版逐一对齐，两端看到的颜色应当一致。
+         深浅主题切换由 ThemeManager 在运行时改写这些画刷对象，不靠重新加载窗口。 -->
     <Color x:Key="SuccessColor">#FF33B85C</Color>
     <Color x:Key="FailedColor">#FFF04545</Color>
     <Color x:Key="RunningColor">#FF388CFA</Color>
@@ -22,15 +23,34 @@
     <SolidColorBrush x:Key="MutedBrush" Color="{StaticResource MutedColor}" />
     <SolidColorBrush x:Key="StarBrush" Color="{StaticResource StarColor}" />
 
-    <!-- 面板底色：跟随系统的明暗主题（WPF 在 Win10/11 上默认是浅色，
-         这里用系统颜色键，至少保证与系统一致而不是硬编码白底） -->
-    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}" />
-    <SolidColorBrush x:Key="PanelForegroundBrush" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}" />
-    <SolidColorBrush x:Key="BarBackgroundBrush" Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}" />
-    <SolidColorBrush x:Key="SecondaryTextBrush" Opacity="0.62" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}" />
-    <SolidColorBrush x:Key="TertiaryTextBrush" Opacity="0.45" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}" />
-    <SolidColorBrush x:Key="RowHoverBrush" Opacity="0.055" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}" />
-    <SolidColorBrush x:Key="FieldBackgroundBrush" Opacity="0.06" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}" />
-    <SolidColorBrush x:Key="HairlineBrush" Opacity="0.12" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}" />
+    <!-- 界面语义色。这里写的是浅色值，ThemeManager 启动时会按系统的明暗开关改写它们。
+         画刷一律不冻结：界面各处用 StaticResource 引用同一个画刷对象，
+         改这个对象的 Color 就能让所有已加载的窗口立刻变色。
+         （WPF 的 SystemColors 不读 Win11 的「应用使用浅色主题」，所以不能靠它。） -->
+    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="PanelForegroundBrush" Color="#1A1A1A" />
+    <SolidColorBrush x:Key="BarBackgroundBrush" Color="#F3F3F3" />
+    <SolidColorBrush x:Key="SecondaryTextBrush" Opacity="0.62" Color="#1A1A1A" />
+    <SolidColorBrush x:Key="TertiaryTextBrush" Opacity="0.45" Color="#1A1A1A" />
+    <SolidColorBrush x:Key="RowHoverBrush" Opacity="0.05" Color="#000000" />
+    <SolidColorBrush x:Key="FieldBackgroundBrush" Opacity="0.05" Color="#000000" />
+    <SolidColorBrush x:Key="HairlineBrush" Opacity="0.10" Color="#000000" />
+
+    <!-- 弹出层（托盘菜单）与系统强调色：强调色取注册表里的 AccentColor -->
+    <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#FDFDFD" />
+    <SolidColorBrush x:Key="PopupBorderBrush" Opacity="0.12" Color="#000000" />
+    <SolidColorBrush x:Key="PopupHoverBrush" Opacity="0.055" Color="#000000" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#0078D4" />
+
+    <!-- 控件外壳用语义色（输入框、复选框、下拉、选项卡、滚动条…）。
+         WPF 自带的主题在深色下仍然是浅色，所以这些控件要我们自己画。 -->
+    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#FDFDFD" />
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#D9D9D9" />
+    <SolidColorBrush x:Key="ControlHoverBrush" Opacity="0.04" Color="#000000" />
+    <SolidColorBrush x:Key="ControlPressedBrush" Opacity="0.08" Color="#000000" />
+    <SolidColorBrush x:Key="DisabledTextBrush" Opacity="0.36" Color="#000000" />
+    <SolidColorBrush x:Key="AccentTextBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="TabSelectedBrush" Opacity="0.06" Color="#000000" />
+    <SolidColorBrush x:Key="ScrollThumbBrush" Opacity="0.28" Color="#000000" />
 
 </ResourceDictionary>

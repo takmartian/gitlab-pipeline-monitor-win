@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using GitLabPipelineMonitor.Core;
 using GitLabPipelineMonitor.Core.GitLab;
@@ -22,11 +23,19 @@ public partial class PanelWindow : Window
     private readonly UpdateManager _updater;
     private readonly PanelViewModel _vm;
 
-    /// <summary>正在拖底边调高度。</summary>
+    /// <summary>正在拖把手调高度。</summary>
     private bool _resizing;
 
-    private int _resizeStartY;
-    private int _resizeStartHeight;
+    /// <summary>把手方位：true = 顶边（任务栏在底部，默认）；false = 底边（任务栏在顶部）。</summary>
+    private bool _gripAtTop = true;
+
+    /// <summary>拖拽起始时的鼠标屏幕 Y（DIP，与 Top 同单位，不用 PointToScreen 的物理像素）。</summary>
+    private double _anchorY;
+
+    /// <summary>拖拽起始时的窗口位置与高度；把手在顶边时底边全程固定在 _anchorBottom。</summary>
+    private double _startTop;
+    private double _startHeight;
+    private double _anchorBottom;
 
     public PanelWindow(Core.AppState state, AppSettings settings, UpdateManager updater)
     {
@@ -37,6 +46,7 @@ public partial class PanelWindow : Window
 
         InitializeComponent();
         DataContext = _vm;
+        ApplyGripEdge();
 
         SearchBox.PreviewKeyDown += Search_PreviewKeyDown;
         _vm.PropertyChanged += (_, e) =>
@@ -49,6 +59,8 @@ public partial class PanelWindow : Window
     /// <summary>在指定屏幕位置按指定尺寸显示（托盘图标右下角对齐）。</summary>
     public void ShowAt(double left, double top, double width, double height)
     {
+        // 任务栏可能在两次显示之间换过位置，重新判断把手该放哪条边
+        ApplyGripEdge();
         Left = left;
         Top = top;
         Width = width;
@@ -255,36 +267,79 @@ public partial class PanelWindow : Window
         ToastHost.Visibility = Visibility.Visible;
     }
 
-    // MARK: - 拖底边调高度
+    // MARK: - 拖把手调高度
+
+    /// <summary>
+    /// 判断任务栏方位，把把手放在远离任务栏的那条边：
+    /// 任务栏在底部（默认）时把手在顶边；任务栏在顶部（工作区顶边缩进而底边贴屏幕底）时把手在底边；
+    /// 任务栏在左右时工作区上下都贴屏幕，维持顶边。
+    /// </summary>
+    private void ApplyGripEdge()
+    {
+        var wa = SystemParameters.WorkArea;
+        var taskbarOnTop = wa.Top > 4 && SystemParameters.PrimaryScreenHeight - wa.Bottom < 4;
+        _gripAtTop = !taskbarOnTop;
+        ResizeGrip.VerticalAlignment = _gripAtTop ? VerticalAlignment.Top : VerticalAlignment.Bottom;
+    }
 
     private void Grip_MouseDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ClickCount == 2)
         {
-            // 双击恢复默认高度
-            _settings.PanelHeight = AppSettings.DefaultPanelHeight;
-            Height = _settings.PanelHeight;
+            // 双击恢复默认高度：自由边跟着把手走，对边保持不动
+            var h = AppSettings.ClampHeight(AppSettings.DefaultPanelHeight, WorkAreaHeight());
+            if (_gripAtTop)
+            {
+                var bottom = Top + Height;
+                var top = Math.Max(SystemParameters.WorkArea.Top, bottom - h);
+                h = (int)(bottom - top);
+                Top = top;
+            }
+            Height = h;
+            _settings.PanelHeight = h;
             return;
         }
         _resizing = true;
-        _resizeStartY = (int)PointToScreen(e.GetPosition(this)).Y;
-        _resizeStartHeight = (int)Height;
+        // 鼠标 Y 用 DIP（Top + 相对窗口的位置），高 DPI 缩放下拖拽比例才对得上
+        var pos = e.GetPosition(this);
+        _anchorY = Top + pos.Y;
+        _startTop = Top;
+        _startHeight = Height;
+        _anchorBottom = Top + Height;
         _settings.BeginPanelHeightAdjustment();
-        GripMark.Opacity = 1;
-        CaptureMouse();
+        ShowGripMark();
+        // 把鼠标捕获在把手元素自己身上：拖动中窗口在动、指针可能离开热区，
+        // 捕获到 Window 会让挂在把手上的 MouseMove/MouseUp 收不到事件（旧实现的坑）
+        ResizeGrip.CaptureMouse();
     }
 
     private void Grip_MouseMove(object sender, MouseEventArgs e)
     {
         if (!_resizing)
         {
-            GripMark.Opacity = 1;
+            ShowGripMark();
             return;
         }
-        var y = (int)PointToScreen(e.GetPosition(this)).Y;
-        var next = AppSettings.ClampHeight(_resizeStartHeight + (y - _resizeStartY), WorkAreaHeight());
-        _settings.PanelHeight = next;
+        // Top + 相对窗口的 Y = 鼠标当前屏幕 Y（DIP）；dy 为负表示向上拖
+        var dy = Top + e.GetPosition(this).Y - _anchorY;
+        // 把手在顶边：向上拖变高；把手在底边：向上拖变矮
+        var raw = _gripAtTop ? _startHeight - dy : _startHeight + dy;
+        var next = AppSettings.ClampHeight((int)Math.Round(raw), WorkAreaHeight());
+        if (_gripAtTop)
+        {
+            // 底边固定：Top 与 Height 反向联动，Top + Height 恒等于起始底边 Y
+            var top = _anchorBottom - next;
+            var minTop = SystemParameters.WorkArea.Top;
+            if (top < minTop)
+            {
+                // 顶边不许越过工作区上沿：撞限时高度跟着底边一起收，底边不跳
+                top = minTop;
+                next = (int)(_anchorBottom - top);
+            }
+            Top = top;
+        }
         Height = next;
+        _settings.PanelHeight = next;
     }
 
     private void Grip_MouseUp(object sender, MouseButtonEventArgs e)
@@ -292,13 +347,32 @@ public partial class PanelWindow : Window
         if (!_resizing) return;
         _resizing = false;
         _settings.EndPanelHeightAdjustment();
-        GripMark.Opacity = 0;
-        ReleaseMouseCapture();
+        ResizeGrip.ReleaseMouseCapture();
+        // 释放捕获后指针若已不在热区上，淡出提示条；还停在热区就继续亮着
+        if (!ResizeGrip.IsMouseOver) HideGripMark();
     }
 
     private void Grip_MouseLeave(object sender, MouseEventArgs e)
     {
-        if (!_resizing) GripMark.Opacity = 0;
+        if (!_resizing) HideGripMark();
+    }
+
+    private void ShowGripMark()
+    {
+        if (GripMark.Opacity < 0.99) AnimateGripMark(1);
+    }
+
+    private void HideGripMark()
+    {
+        if (GripMark.Opacity > 0.01) AnimateGripMark(0);
+    }
+
+    /// <summary>提示条淡入淡出：Win11 风格，不做常驻的三条杠把手。</summary>
+    private void AnimateGripMark(double target)
+    {
+        // FillBehavior 默认就是 Hold（动画结束后保持终值），不用再显式设置
+        GripMark.BeginAnimation(OpacityProperty,
+            new DoubleAnimation(target, new Duration(TimeSpan.FromMilliseconds(120))));
     }
 
     /// <summary>屏幕工作区高度：面板不能拖到屏幕外面去。</summary>

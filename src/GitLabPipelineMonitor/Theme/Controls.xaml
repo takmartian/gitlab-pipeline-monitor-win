@@ -57,7 +57,7 @@
                         </Trigger>
                         <!-- 选中态用系统强调色底 + 描边，符合 Windows 原生观感 -->
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Pill" Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+                            <Setter TargetName="Pill" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -132,7 +132,9 @@
         <Setter Property="Foreground" Value="{StaticResource SecondaryTextBrush}" />
     </Style>
 
-    <Style x:Key="FieldInput" TargetType="TextBox">
+    <!-- 继承隐式 TextBox 样式（Widgets.xaml 里的 Win11 外壳），只覆盖这几项；
+         不继承的话它会用 WPF 自带的浅色模板，深色主题下就是一块白。 -->
+    <Style x:Key="FieldInput" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
         <Setter Property="Height" Value="28" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Padding" Value="7,0" />
@@ -141,8 +143,8 @@
 
     <!-- 主按钮：用系统强调色，Windows 原生观感 -->
     <Style x:Key="AccentButtonStyle" TargetType="Button">
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
-        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource AccentTextBrush}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FontSize" Value="12" />
