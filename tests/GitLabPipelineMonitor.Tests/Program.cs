@@ -23,6 +23,7 @@ public static class Program
             ("链接安全", UrlTests.RunSafeLinks),
             ("版本号比较", VersionTests.Run),
             ("更新说明清理", NotesTests.Run),
+            ("更新安装（替换与回滚）", UpdateInstallerTests.Run),
             ("令牌加密存储", TokenStoreTests.Run),
             ("模型解析（宽松取值）", ModelTests.Run),
             ("状态与筛选", StatusTests.Run),

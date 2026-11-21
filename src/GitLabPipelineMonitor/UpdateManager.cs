@@ -339,64 +339,38 @@ public sealed class UpdateManager : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Windows 上不能删除正在运行的 exe，但可以重命名它。所以让一个独立的 PowerShell
-    /// 进程等本进程退出 → 把旧 exe 改名 → 拷入新文件 → 启动新版本 → 删掉改名后的旧包。
-    /// 本进程随后退出，替换过程不受文件占用影响。
+    /// Windows 上不能删除正在运行的 exe，但可以重命名它。所以起一个**主程序自己的另一个实例**
+    /// 当助手（带 --install-helper 参数）：它等本进程退出 → 把旧 exe 改名 → 拷入新文件 →
+    /// 启动新版本 → 删掉改名后的旧包。本进程随后退出，替换过程不受文件占用影响。
+    ///
+    /// 助手是同一个 WinExe，不分配控制台，所以整个过程**一点窗口都不弹**。
+    /// （早先用系统 PowerShell 干这事，结果在装了 Windows Terminal 的机器上会弹出一个
+    ///  空白终端窗口杵在那儿，看着就像卡死了。）
     /// </summary>
     private void LaunchHelperAndExit(string newExePath, string workDirectory)
     {
         var currentExe = Environment.ProcessPath ?? "";
         if (string.IsNullOrEmpty(currentExe)) throw new GitLabException(GitLabErrorKind.Server, "no current path");
 
-        // 逐字字符串 + 占位符替换：PowerShell 脚本里满是 { } 和 " ，
-        // 用内插原始字符串字面量要数大括号，容易写错，这里直接用最朴素的写法。
-        var script = @"
-            $ErrorActionPreference = 'Stop'
-            $current = '@@CURRENT@@'
-            $new = '@@NEW@@'
-            $work = '@@WORK@@'
-            $procId = @@PID@@
-            try {
-                for ($i = 0; $i -lt 150; $i++) {
-                    if (-not (Get-Process -Id $procId -ErrorAction SilentlyContinue)) { break }
-                    Start-Sleep -Milliseconds 200
-                }
-                $old = ""$current.old""
-                if (Test-Path $old) { Remove-Item $old -Force -ErrorAction SilentlyContinue }
-                Move-Item -LiteralPath $current -Destination $old -Force
-                Copy-Item -LiteralPath $new -Destination $current -Force
-                Start-Process -FilePath $current
-                Start-Sleep -Seconds 2
-                Remove-Item -LiteralPath $old -Force -ErrorAction SilentlyContinue
-                Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
-            } catch {
-                # 替换失败至少把人叫回来：把旧包改回去再启动
-                try { if (Test-Path $old) { Move-Item -LiteralPath $old -Destination $current -Force } } catch {}
-                try { Start-Process -FilePath $current } catch {}
-            }
-            ";
-        script = script
-            .Replace("@@CURRENT@@", Escape(currentExe))
-            .Replace("@@NEW@@", Escape(newExePath))
-            .Replace("@@WORK@@", Escape(workDirectory))
-            .Replace("@@PID@@", Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture));
-
-
-        var scriptPath = Path.Combine(workDirectory, "install.ps1");
-        File.WriteAllText(scriptPath, script, new UTF8Encoding(false));
-
-        Process.Start(new ProcessStartInfo
+        var startInfo = new ProcessStartInfo
         {
-            FileName = "powershell.exe",
-            // 路径可能带空格，用引号包住再交给命令行
-            Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File " + (char)34 + scriptPath + (char)34,
-            UseShellExecute = true
-        });
+            FileName = currentExe,
+            // 不走 ShellExecute：ShellExecute 会让控制台程序分配可见窗口
+            UseShellExecute = false,
+            // 助手是 WinExe，本来就没有控制台；这里再兜一层，确保不冒窗
+            CreateNoWindow = true,
+            WorkingDirectory = Path.GetDirectoryName(currentExe) ?? currentExe,
+        };
+        startInfo.ArgumentList.Add(UpdateHelper.Switch);
+        startInfo.ArgumentList.Add(currentExe);
+        startInfo.ArgumentList.Add(newExePath);
+        startInfo.ArgumentList.Add(workDirectory);
+        startInfo.ArgumentList.Add(Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+        Process.Start(startInfo);
 
         System.Windows.Application.Current.Shutdown();
     }
-
-    private static string Escape(string value) => value.Replace("'", "''");
 
     public void Dispose()
     {

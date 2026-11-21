@@ -24,6 +24,14 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // 更新助手模式：这是替换自己用的临时实例。
+        // 必须在单实例互斥体之前处理 —— 否则助手会被自己的单实例检查挡掉。
+        if (UpdateHelper.TryRun(e.Args))
+        {
+            Shutdown();
+            return;
+        }
+
         // 越早装越好：连启动阶段的错误也要能留下现场，而不是弹系统崩溃框
         CrashGuard.Install(new WindowsHost());
 
@@ -62,7 +70,7 @@ public partial class App : Application
 
         _host = new WindowsHost();
         AppInfo.Version = GetType().Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
-        AppInfo.Build = "10";
+        AppInfo.Build = "11";
 
         _settings = new AppSettings(_host);
         Loc.Language = _settings.Language;

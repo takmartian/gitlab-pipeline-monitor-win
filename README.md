@@ -70,9 +70,23 @@ Windows 凭据管理器 / DPAPI 在 .NET 里是独立的 NuGet 包，会破掉�
    弹窗里展示更新内容，两个按钮：「立即更新」开始下载安装，「忽略此版本」记下这个版本号
    （比它新的版本照样提示），通用设置里可以「取消忽略」；
 3. 更新时下载 release 里的 zip 资产，用 GitHub 在资产上给出的 `sha256` 摘要校验完整性；
-4. Windows 上不能删除正在运行的 exe，但可以重命名它 —— 所以由一个独立的 PowerShell 进程
-   等本进程退出 → 把旧 exe 改名 → 拷入新文件 → 启动新版本 → 删掉旧包；
+4. Windows 上不能删除正在运行的 exe，但可以重命名它 —— 所以由**主程序自己的另一个实例**
+   （带 `--install-helper` 参数的临时实例）等本进程退出 → 把旧 exe 改名 → 拷入新文件 →
+   启动新版本 → 删掉旧包。整个过程**一个窗口都不弹**；
 5. 全程零第三方依赖，不引 Sparkle / NetSparkle 之类的更新框架。
+
+> **为什么更新助手不用 PowerShell**：早先是用系统 `powershell.exe` 跑一段替换脚本，
+> 但在装了 Windows Terminal 的机器上，`powershell.exe` 会被 Terminal 接管，
+> `-WindowStyle Hidden` 直接被忽略 —— 用户只看到一个**空白的终端窗口杵在屏幕上**，
+> 里面什么都没有，看着就像卡死了。而且脚本一失败用户完全看不到任何反馈。
+> 现在改成用主程序自己的另一个实例干这件事：它是 WinExe，本来就不分配控制台，
+> `UseShellExecute=false` + `CreateNoWindow=true` 起就彻底不冒窗，
+> 替换逻辑也挪进了 `Core/Update/UpdateInstaller.cs`，能直接跑单元测试。
+> 每一步还会写进 `%LOCALAPPDATA%\GitLab Pipeline Monitor\update-install.log`，出问题时看这个。
+>
+> 注意：**从 1.1.6 之前的版本升上来仍会看到那个终端窗口** —— 弹窗的是旧版本自己写的
+> 助手，换不掉。自动更新看的是 `releases/latest`，所以能一步跳到 1.1.6；
+> 1.1.6 之后就是全程无窗口了。
 
 > **国内直连 GitHub 慢**：自包含包 100MB+，实测下载可能要几十秒到几分钟。
 > App 走系统代理设置；如果你的网络需要代理，先把系统代理配上再更新。
