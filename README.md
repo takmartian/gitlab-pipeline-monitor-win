@@ -36,6 +36,8 @@ exe 未做代码签名，首次运行 Windows SmartScreen 可能提示「未知�
 - **面板可调大小**：宽度在设置里选；高度直接**拖面板底边**调整，双击底边恢复默认。高度会记住。
 - **其他**：开机自启（注册表 Run 键）、中英文（跟随系统或手动）、改动即时生效无需保存、
   点击面板外部自动收起。
+- **深浅配色跟随系统**：面板、托盘菜单、设置界面、更新弹窗共用一套深色配色与圆角观感，
+  标题栏也是深色的；系统切浅色时整套跟着切。
 
 ## 使用
 
@@ -81,8 +83,11 @@ Windows 凭据管理器 / DPAPI 在 .NET 里是独立的 NuGet 包，会破掉�
 ./build.sh                  # 发布 win-x64 框架依赖版并打包 zip（默认）
 ./build.sh --self-contained # 需要把 .NET 一起打包时才用（包会从几 MB 变成 100MB+）
 ./build.sh debug            # 调试构建
-dotnet test                 # 跑逻辑测试（零依赖自研 runner，可在任意平台跑）
+dotnet run --project tests/GitLabPipelineMonitor.Tests   # 跑逻辑测试（零依赖自研 runner，可在任意平台跑）
 ```
+
+> 测试用的是自研 runner（不是 xUnit），所以要用 `dotnet run --project tests/...` 跑，
+> `dotnet test` 对这个项目无效。
 
 项目分三层，`Core` 不依赖任何 Windows 专有 API，所以全部业务逻辑都能在 macOS 上编译和测试：
 
@@ -99,21 +104,96 @@ GitLabPipelineMonitor.exe --demo                 # 演示数据填充并打开�
 GitLabPipelineMonitor.exe --updateprobe          # 打印 GitHub Release 最新版本 / 资产 / sha256
 GitLabPipelineMonitor.exe --updateinstall        # 端到端验证下载 → 校验 → 解压链路
 GitLabPipelineMonitor.exe --selftest             # 关键逻辑自检
+GitLabPipelineMonitor.exe --probebrush           # 主题画刷的可变性探针（见「托盘菜单为什么是自绘的」）
+GitLabPipelineMonitor.exe --probebox             # ComboBox 显示机制探针（为什么不能靠 DisplayMemberPath）
 GitLabPipelineMonitor.exe --capture out.png panel # 弹出真实界面后抓屏
+GitLabPipelineMonitor.exe --capture out.png traymenu # 弹出托盘右键菜单后抓屏
 ```
+
+`--capture` 的目标：`panel` 面板 / `settings` 设置（连接页）/ `general` 设置（通用页）/
+`projects` 设置（项目页）/ `about` 关于页 / `update` 更新弹窗 / `combobox` 展开的下拉框 /
+`traymenu` 托盘右键菜单。
+
+> 抓屏走 `PrintWindow`（直接把窗口内容画进位图），所以前面挡着别的窗口也拍得到 ——
+> 诊断进程是后台启动的，抢不到前台焦点，直接截屏会拍到聊天窗口之类的东西。
+> 下拉框的弹层是独立的顶层窗口，父窗口的 `PrintWindow` 拍不到它，
+> 所以那一项是「窗口一张 + 弹层一张」合成出来的。
+
+> 抓屏需要桌面处于解锁状态：锁屏时 Windows 挂起会话渲染，既抓不到屏，
+> WPF 的离屏渲染也出不来图（诊断里会自动退化为离屏渲染并说明原因）。
 
 ## 与 macOS 版的差异
 
 | | macOS 版 | Windows 版 |
 |---|---|---|
 | 界面 | SwiftUI + AppKit | WPF |
-| 菜单栏 / 托盘 | NSStatusItem + NSPopover | NotifyIcon + 无边框窗口 |
+| 菜单栏 / 托盘 | NSStatusItem + NSPopover | NotifyIcon + 自绘飞层菜单 + 无边框窗口 |
 | 通知 | UserNotifications | 托盘气泡 |
 | 开机自启 | SMAppService | 注册表 Run 键 |
 | 机器指纹 | IOPlatformUUID | MachineGuid |
 | 更新替换 | 独立 helper 脚本 | 独立 PowerShell 进程 |
 
 令牌加密方案、更新源、界面信息层次、中英文文案、状态色与图标语义两端一致。
+
+## 托盘菜单为什么是自绘的
+
+托盘右键菜单不是系统原生菜单（HMENU），而是自己用 WPF 画的一层飞层弹层，
+观感对齐 Windows 安全中心那个菜单：深灰底、圆角 8、柔和投影、菜单项平铺不带分隔线、
+行高 40、字号 14、悬停是一块圆角浅色。系统是深色时菜单就是深色。
+
+**为什么不直接用原生菜单**：Win11 25H2 把 Win32 深色主题的开关
+（`SetPreferredAppMode` / `AllowDarkModeForWindows` / `RefreshImmersiveColorPolicyState`）
+从 `uxtheme.dll` 里删干净了 —— 本机只剩 85 个导出，这几个入口一个都不剩。
+于是原生菜单在任何主题下都只能是浅色：给归属窗口或菜单窗口打沉浸式深色标记无效，
+套 `SetWindowTheme("DarkMode_Explorer")` 也无效（菜单绘制压根不走 uxtheme）。
+微软自己的 MMC 在同一台机器上菜单同样是白的 —— 安全中心那种深色菜单是 WinUI(XAML) 画的，
+不是原生菜单。要同样的观感，只能自己画。
+
+**怎么落位**：一个 1×1 全透明的锚点窗口摆在鼠标（也就是托盘图标）上，
+菜单用 `Placement=Custom` 定位：右缘贴着鼠标右侧 6px、下缘在鼠标上方 6px，
+再夹回所在显示器的工作区。位置全程用物理像素算完，再按锚点所在显示器的缩放折回 DIP，
+多显示器不同缩放也不会跑偏。
+
+**顺带修掉的一个老问题**：主题画刷一旦放进 `Application.Resources` 就会被 WPF 立刻冻结，
+改不动颜色 —— 结果是应用一直停在浅色配色上，深色系统下菜单也跟着是白的。
+现在改成「换主题时整份重建字典再换进 `MergedDictionaries`」，`DynamicResource` 会重新解析，
+深浅切换即时生效。`--probebrush` 可以现场验证这套行为。
+
+## 设置界面与更新弹窗
+
+设置窗口和更新弹窗跟托盘菜单是同一套观感：深色底、圆角、同一套间距和强调色，
+标题栏也跟着系统走深色（DWM `DWMWA_USE_IMMERSIVE_DARK_MODE`，19/20 两个属性都写，
+兼容不同版本的 Windows），切换主题时重刷。
+
+几个实现上的坑：
+
+- **标题栏颜色要自己接管**：WPF 自带的深色标题栏只有 `WindowChrome` 配合才有，
+  默认标题栏永远是白底黑字。这里用 DWM 属性让系统给标题栏上深色。
+- **强调色上的前景色要自适应**：本机强调色是很亮的黄（`#FFD3CB47`），
+  白勾白字压不住，所以勾选框的对勾、强调按钮上的文字都按强调色亮度自动选深色或浅色。
+- **ComboBox 不靠 `DisplayMemberPath`**：这个属性在「直接 `Items.Add`」而不是 `ItemsSource`
+  的用法下根本不会生成模板，结果选中框里显示的是 CLR 类型名（`SettingsOption`）。
+  现在显式给 `ItemTemplate`，选中框直接绑 `SelectedItem.Text`。
+  `--probebox` 可以现场看到模板有没有生成。
+- **更新弹窗正文顶对齐**：隐式 TextBox 样式是垂直居中，正文会浮在中间，
+  这次改成 `VerticalContentAlignment="Top"`。
+- **占位文字会盖在真值上**：占位提示的显隐读的是输入框的 `Text`，
+  而构造函数里绑定还没把已保存的地址灌进来，只在那儿算一次的话提示会一直亮着、
+  和真实地址叠成两行。现在改成跟着 `TextChanged` 走，绑定推值时也会收起。
+
+## 别把真实信息写进仓库
+
+这个仓库是公开的，提交上去的东西就等于公开了。三条红线：
+
+- **演示数据**（`DemoData.cs`）里的项目路径、用户名、分支名**全是编造的**。
+  照抄真实仓库的名字就等于把内部项目结构和员工账号公开了 ——
+  要加演示数据请用 `web/customer-admin`、`demo.user` 这种一眼假的值。
+- **本机配置和令牌**不进仓库：它们在 `%APPDATA%\GitLab Pipeline Monitor\` 下
+  （`settings.json` 明文存服务器地址，`tokens.json` 是 AES-GCM 密文）。
+  `.gitignore` 里也挡了一层（`settings.json`、`tokens.json`、`.env` 等），
+  但真正的防线是别把这些文件拷进仓库目录。
+- **诊断截图**（`--capture`）会把服务器地址换成 `gitlab.example.com` 再拍，
+  免得截图往外发的时候带出真实地址。
 
 ## 许可
 

@@ -10,25 +10,19 @@ using GitLabPipelineMonitor.Core.Storage;
 using CoreAppInfo = GitLabPipelineMonitor.Core.AppInfo;
 using Drawing = System.Drawing;
 // 本文件显式导入 WinForms 与 System.Drawing（NotifyIcon 和画图标要用）。
-// WPF 的同名类型（Application / MenuItem / Window / Size 等）逐个起别名，避免二义性。
+// WinForms 里也有 Application / MenuItem / ContextMenu 这些和 WPF 同名的类型，
+// 所以 WPF 侧只保留实际引用到的别名，避免二义性。
 using WpfApplication = System.Windows.Application;
-using WpfContextMenu = System.Windows.Controls.ContextMenu;
-using WpfMenuItem = System.Windows.Controls.MenuItem;
-using WpfSeparator = System.Windows.Controls.Separator;
-using WpfWindow = System.Windows.Window;
-using WpfSize = System.Windows.Size;
-using WpfStyle = System.Windows.Style;
-using WpfRect = System.Windows.Rect;
-using PlacementMode = System.Windows.Controls.Primitives.PlacementMode;
 
 namespace GitLabPipelineMonitor;
 
 /// <summary>
 /// 托盘图标：左键开合面板，右键出菜单，图标本身随整体状态变色，
 /// 可选地画状态圆点和失败数量。图标是运行时用 GDI+ 画的 —— 不依赖任何图标库。
-/// 右键菜单是自绘的 WPF ContextMenu（Win11 观感，隐式样式在 Theme/TrayMenu.xaml），
-/// 不再用 WinForms 的 ContextMenuStrip（经典渲染，不跟 Win11 视觉也不跟明暗主题）。
-/// .NET 8 的 NotifyIcon 拿不到托盘图标的屏幕坐标，菜单靠一个 1x1 锚点窗口定位到工作区右下角。
+/// 右键菜单是自绘的 WPF 弹层（TrayMenu），观感对齐 Win11 的飞层菜单（Windows 安全中心那种），
+/// 深色系统下就是深色 —— 系统原生菜单做不到这点，原因见 TrayMenu.cs 的注释。
+/// 窗口内部的右键菜单（面板的流水线行、详情页的作业行）仍是 WPF ContextMenu，
+/// 样式在 Theme/TrayMenu.xaml。
 /// </summary>
 public sealed class TrayIcon : IDisposable
 {
@@ -38,9 +32,8 @@ public sealed class TrayIcon : IDisposable
     private readonly UpdateManager _updater;
     private readonly PanelWindow _panel;
     private readonly WindowsHost _host;
-    private readonly WpfContextMenu _menu;
-    // 1x1 隐形锚点窗口：菜单拿它当 PlacementTarget，停在工作区右下角、贴着任务栏上沿
-    private readonly WpfWindow _anchor;
+    // 托盘右键菜单：自绘的 Win11 飞层菜单
+    private readonly TrayMenu _menu;
 
     // 图标缓存：状态组合有限，画过的复用，避免每次刷新都新建 GDI 句柄
     private readonly Dictionary<string, Drawing.Icon> _icons = new(StringComparer.Ordinal);
@@ -53,32 +46,9 @@ public sealed class TrayIcon : IDisposable
         _panel = panel;
         _host = host;
 
-        _anchor = new WpfWindow
-        {
-            Width = 1,
-            Height = 1,
-            Left = -10000,
-            Top = -10000,
-            Title = CoreAppInfo.Name,
-            WindowStyle = System.Windows.WindowStyle.None,
-            ResizeMode = System.Windows.ResizeMode.NoResize,
-            ShowInTaskbar = false,
-            ShowActivated = false,
-            Topmost = true,
-            AllowsTransparency = true,
-            Background = System.Windows.Media.Brushes.Transparent,
-            Focusable = false,
-            IsHitTestVisible = false,
-        };
-
-        _menu = new WpfContextMenu
-        {
-            // 代码新建、还没进视觉树的 ContextMenu 可能查不到隐式样式，显式回填同一个样式对象
-            Style = ImplicitStyle(typeof(WpfContextMenu)),
-        };
-        _menu.Closed += (_, _) => _anchor.Hide();
-        // 打开后用实际渲染尺寸再校一次越界（首次打开前的 DesiredSize 可能不准）
-        _menu.Opened += (_, _) => CorrectMenuPosition();
+        // 托盘右键菜单：自绘的 Win11 飞层菜单（见 TrayMenu）。
+        // 菜单是 WPF 弹层，不是模态的，弹完就还回 UI 线程。
+        _menu = new TrayMenu();
 
         _icon = new NotifyIcon
         {
@@ -88,8 +58,8 @@ public sealed class TrayIcon : IDisposable
         };
         _icon.DoubleClick += (_, _) => TogglePanel();
         _icon.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) TogglePanel(); };
-        // 不再给 ContextMenuStrip 赋值（那是 WinForms 经典外观）；右键自己弹 WPF 菜单
-        _icon.MouseUp += (_, e) => { if (e.Button == MouseButtons.Right) OpenMenu(); };
+        // 右键出菜单
+        _icon.MouseUp += (_, e) => { if (e.Button == MouseButtons.Right) ShowTrayMenu(); };
 
         RebuildMenu();
         _state.IconNeedsUpdate += UpdateIcon;
@@ -271,82 +241,60 @@ public sealed class TrayIcon : IDisposable
 
     // MARK: - 菜单
 
-    /// <summary>取 App 资源里的隐式样式（Theme/TrayMenu.xaml）。查不到返回 null，菜单退回默认外观。</summary>
-    private static WpfStyle? ImplicitStyle(Type type) => WpfApplication.Current.Resources[type] as WpfStyle;
-
     private void RebuildMenu()
     {
-        _menu.Items.Clear();
+        _menu.Clear();
 
+        // 托盘菜单是一张平铺的列表，不画分隔线（Win11 飞层菜单就是这样）
         if (_updater.LatestVersion is { } latest)
         {
-            AddItem(Loc.T("更新到 {0}", latest), () => _updater.PresentUpdateNotice());
-            AddSeparator();
+            _menu.Add(Loc.T("更新到 {0}", latest), () => _updater.PresentUpdateNotice());
         }
 
-        AddItem(Loc.T("刷新"), () => _state.Refresh(force: true));
-        AddItem(_settings.AutoRefreshPaused ? Loc.T("恢复自动刷新") : Loc.T("暂停自动刷新"),
-            () => { _settings.AutoRefreshPaused = !_settings.AutoRefreshPaused; RebuildMenu(); });
-        AddSeparator();
-        AddItem(Loc.T("设置"), () => ((App)WpfApplication.Current).ShowSettings());
-        AddItem(Loc.T("检查更新"), () => { _ = _updater.CheckAsync(force: true); });
-        AddSeparator();
-        AddItem(Loc.T("退出"), () => WpfApplication.Current.Shutdown());
+        _menu.Add(Loc.T("刷新"), () => _state.Refresh(force: true));
+
+        // 自动刷新：文案固定，勾号表示开没开。
+        // 以前是「暂停自动刷新 / 恢复自动刷新」两套文案来回切，文字会跳，
+        // 还得点开才知道状态 —— 现在一个勾号就够。
+        _menu.AddCheckable(Loc.T("自动刷新"), !_settings.AutoRefreshPaused,
+            enabled => _settings.AutoRefreshPaused = !enabled);
+
+        _menu.Add(Loc.T("设置"), () => ((App)WpfApplication.Current).ShowSettings());
+        _menu.Add(Loc.T("检查更新"), () => { _ = _updater.CheckAsync(force: true); });
+        _menu.Add(Loc.T("退出"), () => WpfApplication.Current.Shutdown());
     }
 
-    private void AddItem(string header, Action onClick)
+    /// <summary>右键托盘图标：在鼠标（托盘图标）位置弹菜单。</summary>
+    private void ShowTrayMenu()
     {
-        var item = new WpfMenuItem { Header = header, Style = ImplicitStyle(typeof(WpfMenuItem)) };
-        item.Click += (_, _) => onClick();
-        _menu.Items.Add(item);
+        // 光标位置当场取：延到 Dispatcher 里再取，指针可能已经挪走了
+        var location = Cursor.Position;
+        // 托盘事件可能在非 UI 线程回调，菜单要在 UI 线程上弹
+        _ = _panel.Dispatcher.InvokeAsync(() => ShowMenuAt(location));
     }
 
-    private void AddSeparator() =>
-        _menu.Items.Add(new WpfSeparator { Style = ImplicitStyle(typeof(WpfSeparator)) });
-
-    /// <summary>右键托盘图标：按当前状态重建菜单，弹在工作区右下角（贴着任务栏上沿）。</summary>
-    private void OpenMenu()
+    /// <summary>
+    /// 在指定屏幕位置弹托盘菜单。右键和诊断模式（--capture traymenu）走的是同一条路径。
+    /// 菜单不是模态的：开完就返回，用户选完（或点外面）才关。
+    /// </summary>
+    internal void ShowMenuAt(Drawing.Point location)
     {
-        // 托盘事件可能从非 UI 线程回调，WPF 菜单要切回 Dispatcher 再开
-        _ = _panel.Dispatcher.InvokeAsync(() =>
-        {
-            RebuildMenu();
-
-            var work = System.Windows.SystemParameters.WorkArea;
-            // .NET 8 的 NotifyIcon 没有 Location，拿不到图标真实坐标（和 ShowPanel 同样的取舍）：
-            // 锚点窗口靠右、上沿比任务栏高 1px，菜单用 Placement=Top 从锚点向上长出来。
-            _anchor.Left = work.Right - 1;
-            _anchor.Top = work.Bottom - 1;
-            _anchor.Show();
-
-            _menu.PlacementTarget = _anchor;
-            _menu.Placement = PlacementMode.Top;
-            _menu.HorizontalOffset = 0;
-            _menu.VerticalOffset = 0;
-
-            // 先量尺寸，开之前就把越界校好；Opened 里再用实际渲染尺寸兜一次
-            _menu.Measure(new WpfSize(double.PositiveInfinity, double.PositiveInfinity));
-            ApplyMenuOffsets(work, _menu.DesiredSize.Width, _menu.DesiredSize.Height);
-            _menu.IsOpen = true;
-        });
+        RebuildMenu();
+        _menu.Show(location);
     }
 
-    private void CorrectMenuPosition()
-    {
-        if (_menu.ActualWidth <= 0) return;
-        ApplyMenuOffsets(System.Windows.SystemParameters.WorkArea, _menu.ActualWidth, _menu.ActualHeight);
-    }
+    /// <summary>菜单落点的自查信息：光标、工作区、锚点实际矩形、缩放系数（诊断用）。</summary>
+    internal string DescribeMenuPlacement() =>
+        $"光标 {_menu.CursorPoint} · 工作区 {_menu.WorkArea} · 锚点 {_menu.AnchorRect} · 缩放 {_menu.Scale:0.###} · {_menu.State} · 弹层 {_menu.PopupInfo}";
 
-    /// <summary>菜单右缘对齐工作区右缘（太宽则靠左摆）；太高则把顶边夹回工作区内。</summary>
-    private void ApplyMenuOffsets(WpfRect work, double width, double height)
-    {
-        var left = work.Right - width - 2;
-        if (left < work.Left + 2) left = work.Left + 2;
-        _menu.HorizontalOffset = left - _anchor.Left;
+    /// <summary>把托盘菜单离屏渲染成 PNG（桌面锁屏抓不到屏时的兜底，也是观感自查）。</summary>
+    internal bool RenderMenuToPng(string path) => _menu.RenderToPng(path);
 
-        var top = _anchor.Top - height;
-        if (top < work.Top + 2) _menu.VerticalOffset = work.Top + 2 + height - _anchor.Top;
-    }
+    /// <summary>离屏渲染的详细说明：用了哪种渲染对象、出图的像素统计（诊断用）。</summary>
+    internal string MenuRenderNote => _menu.RenderNote;
+
+    /// <summary>托盘菜单用的画刷颜色（诊断用）。</summary>
+    internal string MenuBrushDump => _menu.BrushDump;
 
     // MARK: - 面板开合
 
@@ -383,10 +331,9 @@ public sealed class TrayIcon : IDisposable
     {
         _state.IconNeedsUpdate -= UpdateIcon;
         ThemeManager.Changed -= OnThemeChanged;
-        _menu.IsOpen = false;
         _icon.Visible = false;
         _icon.Dispose();
-        _anchor.Close();
+        _menu.Dispose();
         foreach (var icon in _icons.Values) icon.Dispose();
         _icons.Clear();
     }

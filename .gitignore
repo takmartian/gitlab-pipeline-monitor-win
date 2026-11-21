@@ -11,7 +11,16 @@ TestResults/
 *.plg
 # 构建产物
 publish/
-artifacts/
 *.nupkg
-# 本地令牌加密文件（不应进仓库）
+# 本机配置与凭据：真实文件在 %APPDATA%\GitLab Pipeline Monitor\，本来就不在仓库里
+# 这里再加一层保险 —— 万一哪天路径改了或手工拷了一份进来，别让它被提交上去
+settings.json
 tokens.json
+*.tokens.json
+secrets.json
+*.secret.json
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12

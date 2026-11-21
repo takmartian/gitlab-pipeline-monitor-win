@@ -11,6 +11,15 @@
          只借 macOS 版的信息层次（分组卡片 + 分组标题 + 说明文字），不做自绘的 mac 风格。
          静态文案通过 loc:LocalizedText.Source 写中文原文，由 code-behind 取译文并在语言切换时重刷。 -->
     <Window.Resources>
+        <!-- 下拉项的显示模板：只显示 Text 属性。
+             之前用的是 DisplayMemberPath="Text"，但实测它在这套用法下根本没生成模板
+             （ItemTemplate / SelectionBoxItemTemplate 都是 null），下拉框里显示的
+             是一长串 CLR 类型名。显式给 ItemTemplate 之后，ComboBox 会把它
+             同步给 SelectionBoxItemTemplate，选中框和下拉项都走这一个模板；
+             而且 Text 变了绑定会自动更新，语言切换不用额外刷新。 -->
+        <DataTemplate x:Key="OptionText">
+            <TextBlock Text="{Binding Text}" Foreground="{DynamicResource PanelForegroundBrush}" />
+        </DataTemplate>
         <Style x:Key="FieldLabel" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
@@ -45,6 +54,7 @@
                             <TextBlock Style="{StaticResource SectionTitle}" loc:LocalizedText.Source="服务器地址" />
                             <Grid>
                                 <TextBox x:Name="ServerBox" Style="{StaticResource FieldInput}"
+                                         TextChanged="ServerBox_TextChanged"
                                          Text="{Binding Settings.ServerUrl, UpdateSourceTrigger=PropertyChanged}" />
                                 <TextBlock x:Name="ServerPlaceholder" IsHitTestVisible="False" Margin="9,0,0,0"
                                            VerticalAlignment="Center" FontSize="12"
@@ -60,7 +70,7 @@
                                 <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}"
                                            loc:LocalizedText.Source="令牌类型" />
                                 <ComboBox x:Name="AuthModeBox" Grid.Column="1" Height="26"
-                                          SelectedValuePath="Value" DisplayMemberPath="Text"
+                                          ItemTemplate="{StaticResource OptionText}" SelectedValuePath="Value"
                                           SelectedValue="{Binding Settings.AuthMode}" />
                             </Grid>
 
@@ -364,19 +374,19 @@
                                 <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource FieldLabel}"
                                            loc:LocalizedText.Source="语言" />
                                 <ComboBox x:Name="LanguageBox" Grid.Row="0" Grid.Column="1" Height="26" HorizontalAlignment="Left"
-                                          MinWidth="180" SelectedValuePath="Value" DisplayMemberPath="Text"
+                                          MinWidth="180" ItemTemplate="{StaticResource OptionText}" SelectedValuePath="Value"
                                           SelectedValue="{Binding Settings.Language}" />
 
                                 <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource FieldLabel}" Margin="0,8,0,0"
                                            loc:LocalizedText.Source="自动刷新" />
                                 <ComboBox x:Name="RefreshBox" Grid.Row="1" Grid.Column="1" Height="26" HorizontalAlignment="Left"
-                                          MinWidth="180" Margin="0,8,0,0" SelectedValuePath="Value" DisplayMemberPath="Text"
+                                          MinWidth="180" Margin="0,8,0,0" ItemTemplate="{StaticResource OptionText}" SelectedValuePath="Value"
                                           SelectedValue="{Binding Settings.RefreshInterval}" />
 
                                 <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource FieldLabel}" Margin="0,8,0,0"
                                            loc:LocalizedText.Source="面板宽度" />
                                 <ComboBox x:Name="WidthBox" Grid.Row="2" Grid.Column="1" Height="26" HorizontalAlignment="Left"
-                                          MinWidth="180" Margin="0,8,0,0" SelectedValuePath="Value" DisplayMemberPath="Text"
+                                          MinWidth="180" Margin="0,8,0,0" ItemTemplate="{StaticResource OptionText}" SelectedValuePath="Value"
                                           SelectedValue="{Binding Settings.PanelWidth}" />
 
                                 <CheckBox x:Name="RefreshOnOpenBox" Grid.Row="3" Grid.Column="1" Margin="0,10,0,0"

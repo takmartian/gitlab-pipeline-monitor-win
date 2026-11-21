@@ -50,6 +50,9 @@
     <SolidColorBrush x:Key="ControlPressedBrush" Opacity="0.08" Color="#000000" />
     <SolidColorBrush x:Key="DisabledTextBrush" Opacity="0.36" Color="#000000" />
     <SolidColorBrush x:Key="AccentTextBrush" Color="#FFFFFF" />
+    <!-- 强调色上的前景色（勾、强调按钮文字）：强调色浅时用深色，深色时用白色。
+         由 ThemeManager 按强调色亮度改写。 -->
+    <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF" />
     <SolidColorBrush x:Key="TabSelectedBrush" Opacity="0.06" Color="#000000" />
     <SolidColorBrush x:Key="ScrollThumbBrush" Opacity="0.28" Color="#000000" />
 

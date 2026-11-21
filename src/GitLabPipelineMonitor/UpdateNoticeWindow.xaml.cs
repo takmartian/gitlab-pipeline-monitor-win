@@ -18,6 +18,9 @@ public partial class UpdateNoticeWindow : Window
     {
         InitializeComponent();
 
+        // 深色系统下标题栏要跟着变深色
+        ThemeManager.AttachDarkTitleBar(this);
+
         Title = Loc.T("更新");
         TitleText.Text = Loc.T("有新版本 {0}", release.Version);
         CurrentText.Text = Loc.T("当前版本 {0}", currentVersion);

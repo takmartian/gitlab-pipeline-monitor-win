@@ -144,7 +144,7 @@
     <!-- 主按钮：用系统强调色，Windows 原生观感 -->
     <Style x:Key="AccentButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
-        <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FontSize" Value="12" />

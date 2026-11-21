@@ -47,6 +47,9 @@ public partial class SettingsWindow : Window
     private bool _syncingLaunch;
     private string _query = "";
 
+    /// <summary>诊断抓图时的替身服务器地址；null = 显示真实地址。</summary>
+    private string? _previewServerUrl;
+
     private readonly List<SettingsOption> _authOptions = new();
     private readonly List<SettingsOption> _languageOptions = new();
     private readonly List<SettingsOption> _refreshOptions = new();
@@ -70,6 +73,9 @@ public partial class SettingsWindow : Window
 
         InitializeComponent();
         DataContext = this;
+
+        // 深色系统下标题栏要跟着变深色，否则浅色标题栏配深色内容很扎眼
+        ThemeManager.AttachDarkTitleBar(this);
 
         Title = Loc.T("设置");
         AboutNameText.Text = AppInfo.Name;
@@ -150,6 +156,60 @@ public partial class SettingsWindow : Window
         // SetCurrentValue：把选中项对回值，同时不顶掉 XAML 里的 SelectedValue 双向绑定
         if (selected is not null)
             box.SetCurrentValue(System.Windows.Controls.Primitives.Selector.SelectedValueProperty, selected);
+    }
+
+    /// <summary>展开第一个下拉框（诊断抓图用：看下拉项本身的显示对不对）。</summary>
+    public void OpenFirstDropDown() => LanguageBox.IsDropDownOpen = true;
+
+    /// <summary>语言下拉框的弹出层（诊断抓图用：要拿到它的窗口句柄才能单独抓那张弹层）。</summary>
+    public System.Windows.Controls.Primitives.Popup? LanguagePopup()
+        => LanguageBox.Template?.FindName("PART_Popup", LanguageBox) as System.Windows.Controls.Primitives.Popup;
+
+    /// <summary>
+    /// 诊断抓图用：把界面上的服务器地址换成演示地址，别把真实地址拍进截图。
+    ///
+    /// 只换「显示」不碰设置本体 —— 改 settings.ServerUrl 会立刻落盘，
+    /// 把用户自己的服务器地址写坏。所以这里换成另一个绑定源。
+    /// </summary>
+    public void UsePreviewServerUrl(string preview = "https://gitlab.example.com")
+    {
+        _previewServerUrl = preview;
+        ServerBox.SetBinding(System.Windows.Controls.TextBox.TextProperty, new System.Windows.Data.Binding("ServerUrl")
+        {
+            Source = new PreviewServerSource(preview),
+            Mode = System.Windows.Data.BindingMode.TwoWay,
+            UpdateSourceTrigger = System.Windows.Data.UpdateSourceTrigger.PropertyChanged
+        });
+        UpdatePlaceholders();
+        RefreshDynamic();
+    }
+
+    /// <summary>预览用的服务器地址源：只读，写入一律丢弃（预览模式下不该改用户配置）。</summary>
+    private sealed class PreviewServerSource
+    {
+        private readonly string _url;
+        public PreviewServerSource(string url) => _url = url;
+        public string ServerUrl
+        {
+            get => _url;
+            set { /* 预览模式不接受写入 */ }
+        }
+    }
+
+    /// <summary>下拉框状态的自查信息（诊断用：项数 / 选中项 / 选中值）。</summary>
+    public string DebugDump()
+    {
+        var parts = new List<string>();
+        foreach (var pair in new[]
+                 {
+                     ("令牌类型", AuthModeBox), ("语言", LanguageBox),
+                     ("自动刷新", RefreshBox), ("面板宽度", WidthBox),
+                 })
+        {
+            var box = pair.Item2;
+            parts.Add($"{pair.Item1}: 项数={box.Items.Count} 选中项={box.SelectedItem ?? "无"} 选中值={box.SelectedValue ?? "无"}");
+        }
+        return string.Join(" · ", parts);
     }
 
     /// <summary>语言切换后重算下拉项文字（选项对象复用，绑定不中断）。</summary>
@@ -244,10 +304,27 @@ public partial class SettingsWindow : Window
         _host.LaunchAtLogin = LaunchBox.IsChecked == true;
     }
 
+    /// <summary>占位文字显隐：输入框有内容就藏掉提示。
+    /// 单独抽出来是因为输入框的值可能来自绑定 —— 构造函数里绑定还没把已保存的
+    /// 地址灌进来，只在 RefreshDynamic 里算一次的话占位提示会一直亮着，
+    /// 和真实值叠成两行字。绑定推值时会触发 TextChanged，所以两边都靠它。</summary>
+    private void UpdatePlaceholders()
+    {
+        if (ServerPlaceholder != null)
+            ServerPlaceholder.Visibility = string.IsNullOrEmpty(ServerBox.Text) ? Visibility.Visible : Visibility.Collapsed;
+        if (TokenPlaceholder != null)
+            TokenPlaceholder.Visibility = string.IsNullOrEmpty(_settings.Token) ? Visibility.Visible : Visibility.Collapsed;
+        if (SearchPlaceholder != null)
+            SearchPlaceholder.Visibility = string.IsNullOrEmpty(SearchBox.Text) ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void ServerBox_TextChanged(object sender, TextChangedEventArgs e) => UpdatePlaceholders();
+
     // MARK: - 项目页
 
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
+        UpdatePlaceholders();
         if (!_ready) return;
         _query = SearchBox.Text?.Trim() ?? "";
         RebuildRows();
@@ -402,9 +479,7 @@ public partial class SettingsWindow : Window
         if (!_ready) return;
 
         // 占位文字：有值就藏起来（WPF 原生 TextBox/PasswordBox 没有占位符）
-        ServerPlaceholder.Visibility = string.IsNullOrEmpty(ServerBox.Text) ? Visibility.Visible : Visibility.Collapsed;
-        TokenPlaceholder.Visibility = string.IsNullOrEmpty(_settings.Token) ? Visibility.Visible : Visibility.Collapsed;
-        SearchPlaceholder.Visibility = string.IsNullOrEmpty(SearchBox.Text) ? Visibility.Visible : Visibility.Collapsed;
+        UpdatePlaceholders();
 
         // 令牌显示 / 隐藏
         TokenBox.Visibility = _revealToken ? Visibility.Visible : Visibility.Collapsed;
@@ -487,7 +562,9 @@ public partial class SettingsWindow : Window
 
         // 关于
         AboutVersionText.Text = Loc.T("版本 {0} ({1})", AppInfo.Version, AppInfo.Build);
-        AboutServerValue.Text = Fmt.Host(_settings.NormalizedBaseUrl);
+        AboutServerValue.Text = _previewServerUrl is null
+            ? Fmt.Host(_settings.NormalizedBaseUrl)
+            : Fmt.Host(_previewServerUrl);
         AboutProjectsValue.Text = Loc.T("共 {0} 个项目 · {1} 条流水线",
             _state.MonitoredProjects.Count, _state.AllVisiblePipelines.Count);
         UpdateStatusText.Text = UpdateStatusMessage();
@@ -541,6 +618,12 @@ public partial class SettingsWindow : Window
         public string Text { get; private set; }
 
         public void RefreshText() => Text = _label();
+
+        /// <summary>
+        /// 没有模板时（容器没拿到 ContentTemplate）内容呈现器会退化成 ToString()，
+        /// 所以这里直接返回显示文字 —— 免得下拉框里出现一长串 CLR 类型名。
+        /// </summary>
+        public override string ToString() => Text;
     }
 }
 

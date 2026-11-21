@@ -161,7 +161,7 @@
                     IsDefault="True" Click="Run_Click">
                 <StackPanel Orientation="Horizontal">
                     <Viewbox Width="9" Height="9" Margin="0,0,5,0">
-                        <Path Fill="{DynamicResource AccentTextBrush}" Data="{StaticResource Icon.Play}" />
+                        <Path Fill="{DynamicResource AccentForegroundBrush}" Data="{StaticResource Icon.Play}" />
                     </Viewbox>
                     <TextBlock x:Name="RunBtnText" VerticalAlignment="Center" />
                 </StackPanel>

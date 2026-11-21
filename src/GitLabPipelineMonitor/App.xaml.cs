@@ -58,7 +58,7 @@ public partial class App : Application
 
         _host = new WindowsHost();
         AppInfo.Version = GetType().Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
-        AppInfo.Build = "4";
+        AppInfo.Build = "5";
 
         _settings = new AppSettings(_host);
         Loc.Language = _settings.Language;
@@ -72,7 +72,7 @@ public partial class App : Application
         CrashGuard.TrayReady = true;
 
         // 诊断模式：抓完屏/跑完探针就退，不进托盘
-        if (Diagnostics.RunIfRequested(e.Args, _state, _settings, _updater, _panel))
+        if (Diagnostics.RunIfRequested(e.Args, _state, _settings, _updater, _panel, _tray))
         {
             Shutdown();
             return;

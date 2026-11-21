@@ -163,10 +163,10 @@
                                 Background="{DynamicResource ControlBackgroundBrush}"
                                 BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1.5"
                                 VerticalAlignment="Center" SnapsToDevicePixels="True">
-                            <!-- 对勾用矢量 Path 画，不依赖字体字形；勾色恒白 -->
+                            <!-- 对勾用矢量 Path 画，不依赖字体字形；勾色跟着强调色亮度走（浅强调色上用深色勾） -->
                             <Path x:Name="Check" Width="11" Height="11" Stretch="None"
                                   Data="M 2.6,6.2 L 4.9,8.6 L 8.8,3.2"
-                                  Stroke="{DynamicResource AccentTextBrush}" StrokeThickness="1.6"
+                                  Stroke="{DynamicResource AccentForegroundBrush}" StrokeThickness="1.6"
                                   StrokeStartLineCap="Round" StrokeEndLineCap="Round"
                                   StrokeLineJoin="Round" Visibility="Collapsed"
                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -262,12 +262,16 @@
                                 </ControlTemplate>
                             </ToggleButton.Template>
                         </ToggleButton>
-                        <!-- 选中项显示：尊重 DisplayMemberPath（SelectionBoxItem / 其模板） -->
-                        <ContentPresenter x:Name="Content" Margin="9,0,26,0" IsHitTestVisible="False"
-                                          VerticalAlignment="Center" HorizontalAlignment="Left"
-                                          Content="{TemplateBinding SelectionBoxItem}"
-                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                          TextElement.Foreground="{TemplateBinding Foreground}" />
+                        <!-- 选中项显示：直接绑 SelectedItem.Text。
+                             不用 ContentPresenter + DataTemplate —— 内容呈现器渲染模板内容时，
+                             模板的 DataContext 不是 Content 本身，绑 {Binding Text} 会绑空
+                             （之前下拉框里显示的「CLR 类型名」和「一片空白」都是这么来的）。
+                             绑到 TemplatedParent（ComboBox）上的 SelectedItem.Text 最直接，
+                             选项文字变了（含语言切换）也会自动更新。 -->
+                        <TextBlock x:Name="Content" Margin="9,0,26,0" IsHitTestVisible="False"
+                                   VerticalAlignment="Center" HorizontalAlignment="Left"
+                                   Text="{Binding SelectedItem.Text, RelativeSource={RelativeSource TemplatedParent}}"
+                                   Foreground="{TemplateBinding Foreground}" />
                         <!-- 展开箭头：矢量画的向下 V -->
                         <Path x:Name="Arrow" Width="9" Height="6" Stretch="None" IsHitTestVisible="False"
                               HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
@@ -329,7 +333,9 @@
                             <Border x:Name="Bar" Grid.Column="0" Width="3" CornerRadius="1.5" Margin="0,1,6,1"
                                     Background="{DynamicResource AccentBrush}" Visibility="Collapsed"
                                     HorizontalAlignment="Left" />
-                            <ContentPresenter Grid.Column="1" ContentSource="Content" VerticalAlignment="Center"
+                            <ContentPresenter Grid.Column="1" ContentSource="Content"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              VerticalAlignment="Center"
                                               TextElement.Foreground="{TemplateBinding Foreground}" />
                         </Grid>
                     </Border>

@@ -2,7 +2,12 @@ using GitLabPipelineMonitor.Core.GitLab;
 
 namespace GitLabPipelineMonitor.Core;
 
-/// <summary>演示数据：--demo 启动时填充，用于在没有令牌的情况下预览界面。</summary>
+/// <summary>
+/// 演示数据：--demo 启动时填充，用于在没有令牌的情况下预览界面。
+///
+/// 这里的所有项目路径、用户名、分支名都是**编造的**，不要填真实仓库的信息 ——
+/// 这个文件是公开仓库的一部分，写进去就等于公开了。
+/// </summary>
 public static class DemoData
 {
     public static void Apply(AppState state)
