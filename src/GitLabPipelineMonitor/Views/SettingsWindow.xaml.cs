@@ -314,8 +314,8 @@ public partial class SettingsWindow : Window
             ServerPlaceholder.Visibility = string.IsNullOrEmpty(ServerBox.Text) ? Visibility.Visible : Visibility.Collapsed;
         if (TokenPlaceholder != null)
             TokenPlaceholder.Visibility = string.IsNullOrEmpty(_settings.Token) ? Visibility.Visible : Visibility.Collapsed;
-        if (SearchPlaceholder != null)
-            SearchPlaceholder.Visibility = string.IsNullOrEmpty(SearchBox.Text) ? Visibility.Visible : Visibility.Collapsed;
+        // 搜索框的占位文字不用管：它在 SearchBox 样式模板里，
+        // 靠 Text 为空的触发器显隐，跟着正文走，不用在这里手动切。
     }
 
     private void ServerBox_TextChanged(object sender, TextChangedEventArgs e) => UpdatePlaceholders();
@@ -741,6 +741,9 @@ public static class LocalizedText
             case ComboBoxItem item: item.Content = text; break;
             case Label label: label.Content = text; break;
             case GroupBox box: box.Header = text; break;
+            // 搜索框：占位文字走 Tag —— SearchBox 样式模板里那个 TextBlock 绑的就是 Tag，
+            // 模板没暴露占位符属性，用 Tag 传最省事，也不用在窗口里再画一个兄弟节点
+            case TextBox box: box.Tag = text; break;
         }
     }
 

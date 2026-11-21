@@ -225,22 +225,19 @@
                                 </StackPanel>
                             </DockPanel>
 
-                            <Grid Margin="0,8,0,0">
-                                <Border Background="{DynamicResource FieldBackgroundBrush}" CornerRadius="6"
-                                        BorderThickness="0.5" BorderBrush="{DynamicResource HairlineBrush}" Height="26">
-                                    <Grid>
-                                        <TextBox x:Name="SearchBox" Style="{StaticResource SearchBox}"
-                                                 TextChanged="SearchBox_TextChanged" />
-                                        <TextBlock x:Name="SearchPlaceholder" IsHitTestVisible="False" Margin="8,0,0,0"
-                                                   VerticalAlignment="Center" FontSize="12" HorizontalAlignment="Left"
-                                                   Foreground="{DynamicResource TertiaryTextBrush}"
-                                                   loc:LocalizedText.Source="搜索" />
-                                        <Viewbox Width="12" Height="12" Margin="0,0,8,0" HorizontalAlignment="Right">
-                                            <Path Fill="{DynamicResource TertiaryTextBrush}"
-                                                  Data="{StaticResource Icon.Search}" />
-                                        </Viewbox>
-                                    </Grid>
-                                </Border>
+                            <!-- 搜索框：占位文字走 Tag，由 SearchBox 样式画在模板里，
+                                 跟正文用同一套内边距，光标位置和占位文字天然对齐。
+                                 右边那个放大镜是叠在框上的，所以右边也要留出内边距，
+                                 否则输入的文字会压到它下面。
+                                 （原来外面还套了一层同色的 Border，描边叠成双线，这里去掉了。） -->
+                            <Grid Margin="0,8,0,0" Height="26">
+                                <TextBox x:Name="SearchBox" Style="{StaticResource SearchBox}" Padding="6,4,26,4"
+                                         loc:LocalizedText.Source="搜索"
+                                         TextChanged="SearchBox_TextChanged" />
+                                <Viewbox Width="12" Height="12" Margin="0,0,8,0" HorizontalAlignment="Right">
+                                    <Path Fill="{DynamicResource TertiaryTextBrush}"
+                                          Data="{StaticResource Icon.Search}" />
+                                </Viewbox>
                             </Grid>
 
                             <TextBlock x:Name="SelectedCountText" Style="{StaticResource CountText}"
@@ -284,8 +281,11 @@
                                                             </Viewbox>
                                                         </Button>
                                                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="4,0,6,0">
+                                                            <!-- 不写 Foreground 的话，TextBlock 会继承到窗口的默认值（黑色）——
+                                                                 深色主题下就是黑字压在深色底上，几乎看不清 -->
                                                             <TextBlock Text="{Binding Name}" FontSize="12"
-                                                                       TextTrimming="CharacterEllipsis" />
+                                                                       TextTrimming="CharacterEllipsis"
+                                                                       Foreground="{DynamicResource PanelForegroundBrush}" />
                                                             <TextBlock Text="{Binding NamespaceText}" FontSize="10"
                                                                        TextTrimming="CharacterEllipsis"
                                                                        Foreground="{DynamicResource TertiaryTextBrush}"
@@ -329,6 +329,7 @@
                                             <Path Style="{StaticResource EmptyIcon}" Data="{StaticResource Icon.Box}" />
                                         </Viewbox>
                                         <TextBlock FontSize="12" FontWeight="SemiBold" TextAlignment="Center"
+                                                   Foreground="{DynamicResource PanelForegroundBrush}"
                                                    loc:LocalizedText.Source="还没有项目" />
                                         <TextBlock Style="{StaticResource HintText}" TextAlignment="Center" Margin="0,4,0,8"
                                                    loc:LocalizedText.Source="先在「连接」里填好地址和令牌，再点「重新拉取项目列表」；列表出来后点行首的星标就能打星。" />

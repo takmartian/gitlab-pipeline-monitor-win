@@ -120,24 +120,15 @@
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0" Margin="0,0,0,7">
+                    <!-- Padding 给左边放大镜、右边清除按钮留位。
+                         占位文字走 Tag，由 SearchBox 样式画在模板里 —— 跟正文同一套内边距，
+                         光标一进来就正好落在文字该出现的位置上。 -->
                     <TextBox x:Name="SearchBox" Style="{StaticResource SearchBox}" Padding="26,4,22,4"
+                             Tag="搜索 · 项目 / 分支"
                              Text="{Binding Query, UpdateSourceTrigger=PropertyChanged, Delay=120}" />
                     <Viewbox Width="11" Height="11" HorizontalAlignment="Left" Margin="8,0,0,0">
                         <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.Search}" />
                     </Viewbox>
-                    <TextBlock Text="搜索 · 项目 / 分支" FontSize="12" Margin="26,0,0,0" VerticalAlignment="Center"
-                               Foreground="{DynamicResource TertiaryTextBrush}" IsHitTestVisible="False">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
                     <Button Width="18" Height="18" HorizontalAlignment="Right" Margin="0,0,5,0"
                             Style="{StaticResource IconButton}" Click="ClearSearch_Click" ToolTip="清空">
                         <Viewbox Width="10" Height="10">
@@ -191,13 +182,13 @@
                             <StackPanel Margin="0,0,0,2">
 
                                 <!-- 项目头 -->
-                                <Grid Height="34" x:Name="ProjectHeader">
+                                <!-- Background="Transparent"：没有底色时 Grid 的空白处不吃鼠标事件，
+                                     IsMouseOver 就只在指到文字/图标上才为真，悬停显示操作图标会时灵时不灵。 -->
+                                <Grid Height="34" x:Name="ProjectHeader" Background="Transparent">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
@@ -230,25 +221,46 @@
                                         <TextBlock Text="归档" FontSize="9" Foreground="{DynamicResource SecondaryTextBrush}" />
                                     </Border>
 
-                                    <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,4,0">
-                                        <Path Width="11" Height="11" Margin="0,0,4,0" Style="{StaticResource StatusIconPath}"
-                                              DataContext="{Binding Latest}" />
-                                        <TextBlock Text="{Binding LatestTime}" FontSize="9"
-                                                   Foreground="{DynamicResource TertiaryTextBrush}" VerticalAlignment="Center" />
-                                    </StackPanel>
+                                    <!-- 右边这一格：平时显示相对时间、贴到面板右边缘；
+                                         鼠标移入项目头时时间淡出，同一位置换成操作按钮。
+                                         两者叠在同一个格子里、都右对齐，MinWidth 固定 60 —— 显隐时
+                                         格子的宽度不变，标题列不会被挤窄，整行不会跳。
+                                         按钮组平时 Collapsed，本身完全不占位。 -->
+                                    <Grid Grid.Column="4" MinWidth="60" Margin="0,0,4,0" VerticalAlignment="Center">
+                                        <!-- 相对时间 -->
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                                    IsHitTestVisible="False" x:Name="ProjectTime">
+                                            <Path Width="11" Height="11" Margin="0,0,4,0" Style="{StaticResource StatusIconPath}"
+                                                  DataContext="{Binding Latest}" />
+                                            <TextBlock Text="{Binding LatestTime}" FontSize="9"
+                                                       Foreground="{DynamicResource TertiaryTextBrush}" VerticalAlignment="Center" />
+                                        </StackPanel>
 
-                                    <Button Grid.Column="5" Style="{StaticResource IconButton}" Width="20" Height="18"
-                                            Click="StarProject_Click" Tag="{Binding Project.Id}" ToolTip="打星 / 取消打星">
-                                        <Viewbox Width="10" Height="10">
-                                            <Path Fill="{DynamicResource StarBrush}" Data="{StaticResource Icon.StarOutline}" />
-                                        </Viewbox>
-                                    </Button>
-                                    <Button Grid.Column="6" Style="{StaticResource IconButton}" Width="20" Height="18"
-                                            Click="RunPipeline_Click" Tag="{Binding Project.Id}" ToolTip="运行新流水线">
-                                        <Viewbox Width="11" Height="11">
-                                            <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.Play}" />
-                                        </Viewbox>
-                                    </Button>
+                                        <!-- 操作按钮组：平时 Collapsed（完全不占位），鼠标移入项目头才显现，
+                                             跟 macOS 版一致。 -->
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                                    Visibility="Collapsed" x:Name="ProjectActions">
+                                            <Button Style="{StaticResource IconButton}" Width="20" Height="18"
+                                                    Click="StarProject_Click" Tag="{Binding Project.Id}" ToolTip="打星 / 取消打星">
+                                                <Viewbox Width="10" Height="10">
+                                                    <Path Fill="{DynamicResource StarBrush}" Data="{StaticResource Icon.StarOutline}" />
+                                                </Viewbox>
+                                            </Button>
+                                            <Button Style="{StaticResource IconButton}" Width="20" Height="18"
+                                                    Click="RunPipeline_Click" Tag="{Binding Project.Id}" ToolTip="运行新流水线">
+                                                <Viewbox Width="11" Height="11">
+                                                    <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.Play}" />
+                                                </Viewbox>
+                                            </Button>
+                                            <!-- 在项目页打开：浏览器打开该项目主页 -->
+                                            <Button Style="{StaticResource IconButton}" Width="20" Height="18"
+                                                    Click="OpenProject_Click" Tag="{Binding Project.Id}" ToolTip="在项目页打开">
+                                                <Viewbox Width="11" Height="11">
+                                                    <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.Open}" />
+                                                </Viewbox>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
                                 </Grid>
 
                                 <!-- 流水线行 -->
@@ -257,7 +269,7 @@
                                         <DataTemplate>
                                             <Button Style="{StaticResource RowButton}" Click="OpenPipeline_Click"
                                                     Tag="{Binding Id}" HorizontalContentAlignment="Stretch"
-                                                    ContextMenuService.IsEnabled="True">
+                                                    ContextMenuService.IsEnabled="True" x:Name="PipelineRow">
                                                 <Button.ContextMenu>
                                                     <ContextMenu>
                                                         <MenuItem Header="详情" Click="MenuDetail_Click" />
@@ -339,7 +351,7 @@
                                                     <Grid Grid.Column="2" VerticalAlignment="Center" MinWidth="52">
                                                         <TextBlock Text="{Binding StatusText}" FontSize="10"
                                                                    Foreground="{Binding Status, Converter={StaticResource StatusToBrush}}"
-                                                                   HorizontalAlignment="Right" />
+                                                                   HorizontalAlignment="Right" x:Name="RowStatus" />
                                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                                                                     Visibility="Collapsed" x:Name="RowActions">
                                                             <Button Style="{StaticResource IconButton}" Width="22" Height="20"
@@ -365,7 +377,12 @@
                                                 </Grid>
                                             </Button>
                                             <DataTemplate.Triggers>
-                                                <Trigger SourceName="RowActions" Property="IsMouseOver" Value="True">
+                                                <!-- 悬停整行：状态文字淡出，右侧换成操作按钮。
+                                                     必须监听整行（PipelineRow），不能监听 RowActions 自己 ——
+                                                     它平时是 Collapsed，Collapsed 元素不参与命中测试，
+                                                     IsMouseOver 永远是 false，按钮组就永远出不来。 -->
+                                                <Trigger SourceName="PipelineRow" Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="RowStatus" Property="Opacity" Value="0" />
                                                     <Setter TargetName="RowActions" Property="Visibility" Value="Visible" />
                                                 </Trigger>
                                             </DataTemplate.Triggers>
@@ -385,6 +402,17 @@
 
                                 <Border Height="1" Background="{DynamicResource HairlineBrush}" Margin="30,2,0,0" Opacity="0.5" />
                             </StackPanel>
+
+                            <DataTemplate.Triggers>
+                                <!-- 鼠标移入项目头：相对时间淡出，右边换成三个操作按钮。
+                                     用 DataTemplate.Triggers + SourceName（而不是 Style 里的
+                                     ElementName 绑定）：触发器直接挂在模板内的命名元素上，
+                                     每个项目组实例各管各的，不用依赖名字作用域的解析顺序。 -->
+                                <Trigger SourceName="ProjectHeader" Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="ProjectTime" Property="Opacity" Value="0" />
+                                    <Setter TargetName="ProjectActions" Property="Visibility" Value="Visible" />
+                                </Trigger>
+                            </DataTemplate.Triggers>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

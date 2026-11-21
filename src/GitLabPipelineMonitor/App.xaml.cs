@@ -62,7 +62,7 @@ public partial class App : Application
 
         _host = new WindowsHost();
         AppInfo.Version = GetType().Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
-        AppInfo.Build = "9";
+        AppInfo.Build = "10";
 
         _settings = new AppSettings(_host);
         Loc.Language = _settings.Language;

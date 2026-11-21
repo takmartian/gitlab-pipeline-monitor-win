@@ -65,12 +65,30 @@
         </Setter>
     </Style>
 
-    <!-- 搜索框：自己画底和描边，占位文字用 Tag 传（WPF 原生 TextBox 没有占位符） -->
+    <!-- 搜索框：自己画底和描边，占位文字用 Tag 传（WPF 原生 TextBox 没有占位符）。
+
+         三个坑都是实测出来的（artifacts/caretprobe 能复现，1 DIP = 200% 缩放下 2 设备像素）：
+
+         1) 自定义模板里 TextBox 的 Padding 会被套两次：
+            WPF 自己会把 Padding 套到文字宿主上，模板再给内容宿主写
+            Margin="{TemplateBinding Padding}" 就是第二遍 —— Padding=26 文字从 52 DIP 开始。
+            原来模板写死 Margin="6,4"，面板那个 Padding="26,4,22,4"（给左放大镜、右清除按钮留位）
+            被整个吃掉，光标贴在最左边，跟占位文字差 8 DIP，一输入字就压在放大镜上。
+            所以内容宿主这里不能给 Margin，让 WPF 自己套那一次就够。
+
+         2) WPF 的文字宿主自带 2 DIP 左内缩，占位文字是另一个元素，对不上。
+            内容宿主往左挪 2 DIP（Margin="-2,0,0,0"）把这 2 DIP 抵消掉，
+            占位文字就能用同一套 Padding 定位，跟正文完全重合。
+
+         3) 占位文字必须画在模板里：放在外面当兄弟节点的话，
+            要同时对上 TextBox 的内边距和外面那个 TextBlock 的边距，
+            差半像素在 200% 缩放下就是 1 个设备像素。 -->
     <Style x:Key="SearchBox" TargetType="TextBox">
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="FontSize" Value="12" />
+        <Setter Property="Padding" Value="6,4" />
         <Setter Property="Foreground" Value="{DynamicResource PanelForegroundBrush}" />
         <Setter Property="CaretBrush" Value="{DynamicResource PanelForegroundBrush}" />
         <Setter Property="Template">
@@ -78,8 +96,23 @@
                 <ControlTemplate TargetType="TextBox">
                     <Border Background="{DynamicResource FieldBackgroundBrush}" CornerRadius="7"
                             BorderThickness="0.5" BorderBrush="{DynamicResource HairlineBrush}">
-                        <ScrollViewer x:Name="PART_ContentHost" Margin="6,4" VerticalAlignment="Center" />
+                        <Grid>
+                            <!-- 内容宿主不能给 Margin（Padding 会被套两次，见上面第 1 条）；
+                                 -2 是抵消文字宿主自带的 2 DIP 左内缩，见第 2 条 -->
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="-2,0,0,0" VerticalAlignment="Center" />
+                            <!-- 占位文字：内容取自 Tag，文本框为空时才显示 -->
+                            <TextBlock x:Name="Placeholder" Margin="{TemplateBinding Padding}"
+                                       VerticalAlignment="Center" FontSize="12"
+                                       Foreground="{DynamicResource TertiaryTextBrush}"
+                                       IsHitTestVisible="False" Visibility="Collapsed"
+                                       Text="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" />
+                        </Grid>
                     </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Text" Value="">
+                            <Setter TargetName="Placeholder" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

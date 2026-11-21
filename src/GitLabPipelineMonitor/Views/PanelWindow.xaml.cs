@@ -171,6 +171,23 @@ public partial class PanelWindow : Window
         if (group is not null) ShowOverlay(new RunPipelineView(_state, group.Project, CloseOverlay));
     }
 
+    /// <summary>
+    /// 在项目页打开：浏览器打开该项目主页。跟 macOS 版项目头的最后一个按钮一样。
+    /// web_url 万一没取到，ResolvedWebUrl 会用服务器地址 + 路径自己拼；
+    /// SafeBrowserUrl 再挡一道，非 http(s) 的结果直接不打开。
+    /// </summary>
+    private void OpenProject_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: int projectId }) return;
+        var project = _vm.Groups.FirstOrDefault(g => g.Project.Id == projectId)?.Project
+                      ?? _state.StarredProjects.FirstOrDefault(p => p.Id == projectId)
+                      ?? _state.MemberProjects.FirstOrDefault(p => p.Id == projectId);
+        if (project is null) return;
+        var base_ = _settings.NormalizedBaseUrl;
+        var url = ServerAddress.SafeBrowserUrl(project.ResolvedWebUrl(base_), base_);
+        if (url is not null) ((App)Application.Current).GetHost().OpenUrl(url);
+    }
+
     // MARK: - 流水线行
 
     private void OpenPipeline_Click(object sender, RoutedEventArgs e)

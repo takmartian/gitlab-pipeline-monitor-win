@@ -23,6 +23,8 @@ exe 未做代码签名，首次运行 Windows SmartScreen 可能提示「未知�
 
 - **托盘图标**：图标随整体状态变色，可选状态圆点与失败数量徽章；左键开合面板，右键出菜单。
 - **点图标即看面板**：按项目分组列出打星项目的最新流水线 —— 分支、提交、耗时、覆盖率、触发人、相对时间、状态色。
+- **鼠标移入项目行才出操作按钮**：打星 / 运行新流水线 / 在浏览器打开项目主页；平时不占位，
+  相对时间贴着面板右边缘，和 macOS 版一致。
 - **筛选与搜索**：全部 / 运行中 / 失败 / 成功 / 其他（带计数），搜索匹配项目、分支、SHA。
 - **流水线操作**：重跑、取消；点进详情页看阶段与作业列表，可重跑 / 取消单个作业、打开作业日志。
 - **运行新流水线**：选分支后触发（分支列表来自 GitLab API，默认选中默认分支，可搜索）。
@@ -208,6 +210,39 @@ GitLabPipelineMonitor.exe --capture out.png traymenu # 弹出托盘右键菜单�
   `BarBackgroundBrush`（深色 `#272727`、浅色 `#F3F3F3`）铺了一层，
   又被 `Margin` 内缩成一块**带直角边的浮空灰块**，看着像没画完的占位块。
   现在直接用面板底色，不加分隔线。
+- **`TextBlock` 不写 `Foreground` 就是黑色**：`Foreground` 会一路往上继承，
+  窗口没设就继承到 WPF 的默认值（黑）。设置页项目列表里那个项目名
+  `TextBlock` 漏了 `Foreground`，深色主题下就是黑字压在深色底上，几乎看不清 ——
+  同一行下面那行项目路径（写了 `Foreground`）反而是正常的，很能说明问题。
+  现在补上 `PanelForegroundBrush`；空状态那句「还没有项目」也一样。
+- **自定义 `TextBox` 模板里 `Padding` 会被套两次**：WPF 自己会把 `Padding`
+  套到文字宿主上，模板再给内容宿主（`PART_ContentHost`）写
+  `Margin="{TemplateBinding Padding}"` 就是第二遍 —— `Padding=26` 文字从 52 DIP 开始。
+  搜索框原来更糟：模板写死 `Margin="6,4"`，面板那个 `Padding="26,4,22,4"`
+  （给左边放大镜、右边清除按钮留位）被整个吃掉，光标贴在最左边，
+  跟占位文字差 8 DIP，一输入字就压在放大镜上。
+  现在内容宿主不再给 `Margin`（让 WPF 自己套那一次），
+  占位文字也搬进模板里画（文案走 `Tag`），跟正文用同一套 `Padding` 定位 ——
+  实测错位 **0 DIP**（原来 8 DIP）。
+  要核对的话拿 `artifacts/caretprobe` 那个探针：同一个字形分别当占位文字和正文渲染，
+  量两者的起始列差多少。
+- **悬停显隐一律用 `DataTemplate.Triggers` + `SourceName`**：项目头和流水线行的
+  操作按钮组都是「鼠标移入才出现」，触发器写成
+  `<Trigger SourceName="项目头" Property="IsMouseOver" Value="True">`，
+  挂在 `DataTemplate.Triggers` 上，直接 `Setter TargetName="按钮组"`。
+  两个坑：
+  - **别监听 `Collapsed` 的元素**：`Collapsed` 不参与命中测试，
+    `IsMouseOver` 永远是 `false`。原来流水线行的按钮组监听的就是它自己
+    （平时 `Collapsed`），所以那三个按钮从来没显示过。要监听可见的宿主（整行）。
+  - **`DataTemplate` 里别在 `Style.Triggers` 的 `EnterActions`/`ExitActions` 里写
+    `Storyboard`**：模板实例化时会抛
+    `XamlParseException: 向类型为"System.Windows.TriggerActionCollection"的集合中添加值引发了异常`，
+    整个窗口起不来。要做淡入淡出就把 `Storyboard` 挪到窗口级资源、
+    或者干脆只用 `Setter` 改 `Opacity`。
+- **平时别给操作按钮留空位**：相对时间和操作按钮叠在同一个 `Grid` 单元格里、
+  都右对齐，格子 `MinWidth="60"`。平时按钮组 `Collapsed` 完全不占位，
+  时间贴到面板右边缘；悬停时按钮组显示、时间淡出 —— 格子宽度不变，标题列不会被挤窄，
+  整行不会跳一下。
 
 ## 线程约定：状态在后台线程，界面在 UI 线程
 
