@@ -131,7 +131,7 @@
         </Grid.RowDefinitions>
 
         <!-- ===== 顶栏：返回 + 标题 + 状态 ===== -->
-        <Grid Grid.Row="0" Background="{DynamicResource BarBackgroundBrush}" Margin="10,8">
+        <Grid Grid.Row="0" Margin="10,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -364,7 +364,7 @@
         <Border Grid.Row="3" Height="1" Background="{DynamicResource HairlineBrush}" />
 
         <!-- ===== 底部操作 ===== -->
-        <Grid Grid.Row="4" Background="{DynamicResource BarBackgroundBrush}" Margin="10,6">
+        <Grid Grid.Row="4" Margin="10,6">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <Button x:Name="RetryBtn" FontSize="11" Padding="8,3" Click="RetryPipeline_Click">
                     <StackPanel Orientation="Horizontal">

@@ -59,7 +59,9 @@
             </Grid.RowDefinitions>
 
             <!-- ===== 顶栏 ===== -->
-            <Grid Grid.Row="0" Background="{DynamicResource BarBackgroundBrush}" Margin="10,8">
+            <!-- 顶栏/底栏不再铺灰底：原来用 BarBackgroundBrush 内缩成一块直角灰块，
+                 看着像没画完的占位块。直接用面板底色，干净。 -->
+            <Grid Grid.Row="0" Margin="10,8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -279,7 +281,7 @@
 
                                                     <StackPanel Grid.Column="1" Margin="6,0,4,0">
                                                         <StackPanel Orientation="Horizontal">
-                                                            <Viewbox Width="8" Height="8" Margin="0,0,4,0" VerticalAlignment="Center">
+                                                            <Viewbox Width="9" Height="9" Margin="0,0,4,0" VerticalAlignment="Center">
                                                                 <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.Branch}" />
                                                             </Viewbox>
                                                             <TextBlock Text="{Binding Ref}" FontSize="11.5" FontWeight="Medium"
@@ -294,7 +296,7 @@
                                                         <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
                                                             <StackPanel Orientation="Horizontal" Margin="0,0,9,0">
                                                                 <Viewbox Width="8" Height="8" Margin="0,0,3,0" VerticalAlignment="Center">
-                                                                    <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.Box}" />
+                                                                    <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.Commit}" />
                                                                 </Viewbox>
                                                                 <TextBlock Text="{Binding ShortSha}" FontSize="10"
                                                                            Foreground="{DynamicResource TertiaryTextBrush}" />
@@ -408,7 +410,7 @@
             <Border Grid.Row="4" Height="1" Background="{DynamicResource HairlineBrush}" />
 
             <!-- ===== 底栏 ===== -->
-            <Grid Grid.Row="5" Background="{DynamicResource BarBackgroundBrush}" Margin="10,6" Height="26">
+            <Grid Grid.Row="5" Margin="10,6" Height="26">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Viewbox Width="9" Height="9" Margin="0,0,5,0">
                         <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.Clock}" />
