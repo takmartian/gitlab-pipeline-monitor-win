@@ -78,6 +78,19 @@ public partial class PanelWindow : Window
         Hide();
     }
 
+    /// <summary>
+    /// 打开面板并直接进到某条流水线的详情（屏幕浮标上点条目时用）。
+    /// 面板本身要已经显示出来 —— 定位和显示交给 <see cref="TrayIcon.ShowPanel"/>。
+    /// </summary>
+    public void ShowWithPipeline(int pipelineId)
+    {
+        var pipeline = FindPipeline(pipelineId);
+        if (pipeline is null) return;
+        var project = _state.ProjectFor(pipeline);
+        if (project is null) return;
+        ShowOverlay(new PipelineDetailView(_state, project, pipeline, CloseOverlay));
+    }
+
     private void Window_Deactivated(object? sender, EventArgs e)
     {
         // 点到面板外面就收起，这是 Windows 上弹出式面板的常规行为。

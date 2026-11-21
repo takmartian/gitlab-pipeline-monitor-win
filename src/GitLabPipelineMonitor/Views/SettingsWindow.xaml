@@ -414,6 +414,15 @@
 
                     <Border Style="{StaticResource Card}">
                         <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" loc:LocalizedText.Source="屏幕浮标" />
+                            <CheckBox loc:LocalizedText.Source="显示屏幕边缘浮标" IsChecked="{Binding Settings.FloatingBadgeEnabled}" />
+                            <TextBlock Style="{StaticResource HintText}" FontSize="10" Margin="0,6,0,0"
+                                       loc:LocalizedText.Source="在屏幕右边缘留一小条：有流水线在跑会变蓝并脉动，失败会变红。鼠标移上去能看清单，点一下打开完整面板；也可以拖到别的屏幕。" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
                             <TextBlock Style="{StaticResource SectionTitle}" loc:LocalizedText.Source="更新" />
                             <CheckBox loc:LocalizedText.Source="自动检查更新" IsChecked="{Binding Settings.AutoUpdateEnabled}" />
                             <TextBlock Style="{StaticResource HintText}" FontSize="10" Margin="0,6,0,0"

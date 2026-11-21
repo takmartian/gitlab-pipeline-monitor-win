@@ -17,6 +17,7 @@ public partial class App : Application
     private Core.AppState? _state;
     private TrayIcon? _tray;
     private PanelWindow? _panel;
+    private FloatingBadgeWindow? _badge;
     private SettingsWindow? _settingsWindow;
     private UpdateManager? _updater;
 
@@ -70,7 +71,7 @@ public partial class App : Application
 
         _host = new WindowsHost();
         AppInfo.Version = GetType().Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
-        AppInfo.Build = "11";
+        AppInfo.Build = "12";
 
         _settings = new AppSettings(_host);
         Loc.Language = _settings.Language;
@@ -83,8 +84,21 @@ public partial class App : Application
         // 托盘建起来了：之后的异常可以用气泡通知告诉用户
         CrashGuard.TrayReady = true;
 
+        // 屏幕边缘浮标：托盘图标被收进「隐藏的图标」时，靠它看有没有流水线在跑。
+        // 数据跟托盘图标共用同一份状态，不额外发请求。
+        _badge = new FloatingBadgeWindow(_state, _settings, _panel, _tray);
+        _state.IconNeedsUpdate += OnIconNeedsUpdate;
+        _state.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(Core.AppState.Pipelines)) _badge?.Rebuild();
+        };
+        _settings.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(AppSettings.FloatingBadgeEnabled)) ApplyBadgeVisibility();
+        };
+
         // 诊断模式：抓完屏/跑完探针就退，不进托盘
-        if (Diagnostics.RunIfRequested(e.Args, _state, _settings, _updater, _panel, _tray))
+        if (Diagnostics.RunIfRequested(e.Args, _state, _settings, _updater, _panel, _tray, _badge))
         {
             Shutdown();
             return;
@@ -92,6 +106,7 @@ public partial class App : Application
 
         _state.Bootstrap();
         _updater.Start();
+        ApplyBadgeVisibility();
 
         // 记一行启动现场：主题判定、强调色、托盘图标来源。
         // 以后出怪问题，把 error.log 发过来就能看出是哪一步不对。
@@ -110,6 +125,24 @@ public partial class App : Application
     /// <summary>面板要拿宿主能力（打开链接、复制剪贴板）。</summary>
     public WindowsHost GetHost() => _host!;
 
+    /// <summary>状态刷新完了：浮标跟着重建（托盘图标也是这时候重画的）。</summary>
+    private void OnIconNeedsUpdate() => _badge?.Rebuild();
+
+    /// <summary>按设置里的开关显示/隐藏浮标。</summary>
+    private void ApplyBadgeVisibility()
+    {
+        if (_badge is null) return;
+        if (_settings?.FloatingBadgeEnabled == true)
+        {
+            if (!_badge.IsVisible) _badge.Show();
+            _badge.Reposition();
+        }
+        else if (_badge.IsVisible)
+        {
+            _badge.Hide();
+        }
+    }
+
     /// <summary>供托盘打开设置窗口（同一个实例只开一个）。</summary>
     public void ShowSettings(SettingsTab tab = SettingsTab.Connection)
     {
@@ -127,6 +160,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _tray?.Dispose();
+        _badge?.Close();
         _state?.Dispose();
         _updater?.Dispose();
         // 第二份实例没拿到互斥体的所有权，释放它会抛异常 —— 只在持有时释放

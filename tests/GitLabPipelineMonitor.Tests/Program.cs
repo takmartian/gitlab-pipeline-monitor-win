@@ -32,6 +32,7 @@ public static class Program
             ("格式化", FormatTests.Run),
             ("本地化", LocTests.Run),
             ("状态编排", StateTests.Run),
+            ("屏幕贴边与命中", ScreenTests.Run),
             ("真实 GitHub Release 数据", LiveReleaseTests.Run)
         };
 

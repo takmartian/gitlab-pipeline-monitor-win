@@ -53,6 +53,9 @@ public sealed class AppSettings : ObservableObject
         _autoUpdateEnabled = _file.AutoUpdateEnabled;
         _ignoredUpdateVersion = _file.IgnoredUpdateVersion;
         _autoRefreshPaused = _file.AutoRefreshPaused;
+        _floatingBadgeEnabled = _file.FloatingBadgeEnabled;
+        _floatingBadgeScreen = _file.FloatingBadgeScreen ?? "";
+        _floatingBadgeTopRatio = Math.Clamp(_file.FloatingBadgeTopRatio, 0, 1);
 
         Loc.Language = _language;
         _tokenAccount = ServerAddress.StrictAccount(_serverUrl) ?? "default";
@@ -258,6 +261,55 @@ public sealed class AppSettings : ObservableObject
         {
             if (!Set(ref _autoRefreshPaused, value)) return;
             _file.AutoRefreshPaused = value;
+            SaveNow();
+        }
+    }
+
+    /// <summary>
+    /// 屏幕右侧浮标。Windows 的托盘图标一多就被收进「隐藏的图标」里，
+    /// 这时候就靠浮标一眼看出有没有流水线在跑。默认开着，可以在设置里关掉。
+    /// </summary>
+    private bool _floatingBadgeEnabled;
+    public bool FloatingBadgeEnabled
+    {
+        get => _floatingBadgeEnabled;
+        set
+        {
+            if (!Set(ref _floatingBadgeEnabled, value)) return;
+            _file.FloatingBadgeEnabled = value;
+            SaveNow();
+        }
+    }
+
+    /// <summary>
+    /// 浮标停在哪块显示器上（设备名）。用户把浮标拖到副屏就记副屏，
+    /// 下次启动还在那儿；空字符串表示主屏。显示器被拔掉时回落到主屏。
+    /// </summary>
+    private string _floatingBadgeScreen;
+    public string FloatingBadgeScreen
+    {
+        get => _floatingBadgeScreen;
+        set
+        {
+            if (!Set(ref _floatingBadgeScreen, value ?? "")) return;
+            _file.FloatingBadgeScreen = _floatingBadgeScreen;
+            SaveNow();
+        }
+    }
+
+    /// <summary>
+    /// 浮标的纵向位置：工作区高度的比例。记比例而不是绝对坐标，
+    /// 换分辨率、换缩放之后位置仍然说得过去。
+    /// </summary>
+    private double _floatingBadgeTopRatio;
+    public double FloatingBadgeTopRatio
+    {
+        get => _floatingBadgeTopRatio;
+        set
+        {
+            var clamped = Math.Clamp(value, 0, 1);
+            if (!Set(ref _floatingBadgeTopRatio, clamped)) return;
+            _file.FloatingBadgeTopRatio = clamped;
             SaveNow();
         }
     }

@@ -32,7 +32,7 @@ public static class Diagnostics
     private const int AttachParentConsole = -1;
 
     public static bool RunIfRequested(string[] args, Core.AppState state, AppSettings settings,
-        UpdateManager updater, PanelWindow panel, TrayIcon tray)
+        UpdateManager updater, PanelWindow panel, TrayIcon tray, Views.FloatingBadgeWindow? badge = null)
     {
         // 从 cmd 启动的 WinExe 默认没有控制台句柄，附加父控制台才能把输出打出来
         AttachConsole(AttachParentConsole);
@@ -41,6 +41,7 @@ public static class Diagnostics
         if (Has(args, "--updateui")) { RunDiagnostic(() => UpdateUiProbeAsync(state, settings, updater)); return true; }
         if (Has(args, "--updateinstall")) { RunDiagnostic(() => InstallProbeAsync(updater)); return true; }
         if (Has(args, "--selftest")) { SelfTest(state, settings); return true; }
+        if (Has(args, "--probebadge")) { ProbeBadge(state, badge); return true; }
         if (Has(args, "--probebrush")) { Line("· 画刷探针：" + ThemeManager.Probe()); return true; }
         if (Has(args, "--probebox")) { ProbeComboBox(); return true; }
 
@@ -54,7 +55,7 @@ public static class Diagnostics
                 CaptureTrayMenu(path, tray);
                 return true;
             }
-            Capture(path, what, state, settings, panel);
+            Capture(path, what, state, settings, panel, badge);
             return true;
         }
 
@@ -226,6 +227,61 @@ public static class Diagnostics
     }
 
     // MARK: --selftest
+
+    /// <summary>
+    /// 浮标位置探针：验证「贴在工作区右边缘」在真实运行时确实成立。
+    ///
+    /// 贴边是整套浮标逻辑的地基 —— 位置算错一点，浮标就会骑在屏幕边上或者跑到屏幕外。
+    /// 这里把三种状态都跑一遍：刚显示出来、展开之后、被挪到别处之后（应当自己弹回右边缘）。
+    /// </summary>
+    private static void ProbeBadge(Core.AppState state, Views.FloatingBadgeWindow? badge)
+    {
+        if (badge is null)
+        {
+            Line("✗ 浮标没有创建");
+            return;
+        }
+
+        Line("· 浮标位置探针开始");
+        DemoData.Apply(state);
+        badge.Rebuild();
+        if (!badge.IsVisible) badge.Show();
+
+        Pump(600);
+        Line($"  折叠态：{badge.DescribePlacement()}");
+
+        badge.ExpandForCapture();
+        Pump(600);
+        Line($"  展开态：{badge.DescribePlacement()}");
+
+        // 模拟「被拖到屏幕中间」：挪走之后应当自己弹回右边缘
+        var work = ScreenPlacement.Primary().WorkArea;
+        badge.MoveForProbe((int)(work.Left + 200), (int)(work.Top + 200));
+        Pump(600);
+        Line($"  挪走后：{badge.DescribePlacement()}");
+
+        var handle = badge.NativeHandle;
+        var rect = ScreenPlacement.GetWindowRect(handle);
+        var ok = Math.Abs(work.Right - rect.Right) <= 1 && rect.Left >= work.Left && rect.Top >= work.Top
+                 && rect.Bottom <= work.Bottom;
+        Line(ok ? "✓ 浮标贴住了工作区右边缘，且没有跑出工作区" : "✗ 浮标位置不对");
+    }
+
+    /// <summary>空转一小会儿，让界面把该画的画完（抓图和探针都要等渲染）。</summary>
+    private static void Pump(int milliseconds)
+    {
+        var frame = new System.Windows.Threading.DispatcherFrame();
+        var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
+        var elapsed = 0;
+        timer.Tick += (_, _) =>
+        {
+            elapsed += 50;
+            if (elapsed >= milliseconds) frame.Continue = false;
+        };
+        timer.Start();
+        System.Windows.Threading.Dispatcher.PushFrame(frame);
+        timer.Stop();
+    }
 
     private static void SelfTest(Core.AppState state, AppSettings settings)
     {
@@ -524,7 +580,8 @@ public static class Diagnostics
         }
     }
 
-    private static void Capture(string path, string what, Core.AppState state, AppSettings settings, PanelWindow panel)
+    private static void Capture(string path, string what, Core.AppState state, AppSettings settings, PanelWindow panel,
+        Views.FloatingBadgeWindow? badge = null)
     {
         settings.DemoMode = true;
         DemoData.Apply(state);
@@ -533,6 +590,8 @@ public static class Diagnostics
         {
             "settings" or "projects" or "general" or "about" or "combobox" => CreateSettingsForCapture(what),
             "update" => CreateUpdateNoticeForCapture(),
+            "badge" => CreateBadgeForCapture(badge, state, expanded: true),
+            "badgestrip" => CreateBadgeForCapture(badge, state, expanded: false),
             _ => panel
         };
 
@@ -761,6 +820,20 @@ public static class Diagnostics
 
         public string Text { get; }
         public int Value { get; }
+    }
+
+    /// <summary>
+    /// 造一个展开状态的浮标用来抓屏（诊断用）。
+    /// 展开平时靠鼠标靠近触发，抓图时直接把它撑开摆到屏幕左上角。
+    /// </summary>
+    private static Window CreateBadgeForCapture(Views.FloatingBadgeWindow? badge, Core.AppState state, bool expanded)
+    {
+        if (badge is null) return new Window { Width = 280, Height = 200, Title = "浮标" };
+        badge.Rebuild();
+        if (!badge.IsVisible) badge.Show();
+        if (expanded) badge.ExpandForCapture();
+        else badge.ShowStripForCapture();
+        return badge;
     }
 
     /// <summary>造一个假的更新弹窗用来抓屏（诊断用，不联网）。</summary>

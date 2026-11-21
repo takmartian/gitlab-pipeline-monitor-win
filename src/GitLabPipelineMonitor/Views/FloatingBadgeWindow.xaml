@@ -1,0 +1,145 @@
+<Window x:Class="GitLabPipelineMonitor.Views.FloatingBadgeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="GitLab Pipeline Monitor"
+        WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False"
+        AllowsTransparency="True" Background="Transparent"
+        WindowStartupLocation="Manual" Topmost="True" ShowActivated="False"
+        SizeToContent="Height" SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display" UseLayoutRounding="True">
+
+    <!-- 折叠态就是右边这根细条；展开时面板从它左边铺开，细条原地不动，
+         用户能认出「还是刚才那根条」。窗口宽度由代码在两种状态间切换。 -->
+    <Grid x:Name="RootGrid">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ===== 展开态：状态摘要 + 在跑/失败的流水线 ===== -->
+        <Border x:Name="Panel" Grid.Column="0" Visibility="Collapsed"
+                Background="{DynamicResource PopupBackgroundBrush}"
+                BorderBrush="{DynamicResource PopupBorderBrush}" BorderThickness="1"
+                CornerRadius="8" Padding="12,9,10,9">
+            <StackPanel>
+
+                <!-- 标题行：也能拖着走（拖把手放在这里，条目留给点击） -->
+                <Grid x:Name="PanelHeader" Background="Transparent" Cursor="SizeAll"
+                      MouseLeftButtonDown="Strip_MouseDown"
+                      MouseMove="Strip_MouseMove"
+                      MouseLeftButtonUp="Strip_MouseUp">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Ellipse x:Name="HeaderDot" Grid.Column="0" Width="8" Height="8"
+                             VerticalAlignment="Center" Margin="0,0,8,0"
+                             Fill="{DynamicResource MutedBrush}" />
+
+                    <TextBlock Grid.Column="1" Text="{Binding Summary}" FontSize="11.5" FontWeight="SemiBold"
+                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource PanelForegroundBrush}" />
+
+                    <TextBlock Grid.Column="2" Text="{Binding EmptyText}" FontSize="10.5" Margin="8,0,0,0"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               Visibility="{Binding HasItems, Converter={StaticResource InvBoolToVis}}" />
+                </Grid>
+
+                <!-- 条目列表：条目多的时候自己滚，别把浮标撑出屏幕 -->
+                <ScrollViewer MaxHeight="248" Margin="0,4,-4,0" Focusable="False"
+                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding Items}"
+                                  Visibility="{Binding HasItems, Converter={StaticResource BoolToVis}}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Click="Item_Click" Tag="{Binding PipelineId}"
+                                    HorizontalContentAlignment="Stretch" Cursor="Hand"
+                                    Background="Transparent" BorderThickness="0" Padding="4,3">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="Box" Background="Transparent" CornerRadius="4"
+                                                Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Stretch" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Box" Property="Background"
+                                                        Value="{DynamicResource PopupHoverBrush}" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Ellipse Grid.Column="0" Width="7" Height="7" VerticalAlignment="Center">
+                                        <Ellipse.Style>
+                                            <Style TargetType="Ellipse">
+                                                <Setter Property="Fill" Value="{DynamicResource MutedBrush}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                        <Setter Property="Fill" Value="{DynamicResource RunningBrush}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsFailed}" Value="True">
+                                                        <Setter Property="Fill" Value="{DynamicResource FailedBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+
+                                    <StackPanel Grid.Column="1" Margin="7,0,8,0">
+                                        <TextBlock Text="{Binding Project}" FontSize="11"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource PanelForegroundBrush}" />
+                                        <TextBlock Text="{Binding Branch}" FontSize="10"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}" />
+                                    </StackPanel>
+
+                                    <TextBlock Grid.Column="2" Text="{Binding StatusText}" FontSize="10"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource SecondaryTextBrush}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                        <Setter Property="Foreground" Value="{DynamicResource RunningBrush}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsFailed}" Value="True">
+                                                        <Setter Property="Foreground" Value="{DynamicResource FailedBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- 没列完的条数 -->
+                <TextBlock Text="{Binding MoreText}" FontSize="10" Margin="2,5,0,0"
+                           Foreground="{DynamicResource TertiaryTextBrush}"
+                           Visibility="{Binding HasMore, Converter={StaticResource BoolToVis}}" />
+            </StackPanel>
+        </Border>
+
+        <!-- ===== 折叠/展开共用的竖条：永远在右边，也是拖动把手 ===== -->
+        <Border x:Name="Strip" Grid.Column="1" Width="5" Height="64" CornerRadius="2.5"
+                VerticalAlignment="Top" Background="{DynamicResource MutedBrush}" Opacity="0.22"
+                Cursor="SizeAll" MouseLeftButtonDown="Strip_MouseDown"
+                MouseMove="Strip_MouseMove" MouseLeftButtonUp="Strip_MouseUp"
+                ToolTip="点击打开面板 · 拖动可以换位置" />
+    </Grid>
+</Window>

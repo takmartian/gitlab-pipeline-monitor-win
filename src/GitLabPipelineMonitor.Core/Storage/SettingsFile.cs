@@ -27,6 +27,15 @@ public sealed class SettingsFile
     [JsonPropertyName("ignoredUpdateVersion")] public string? IgnoredUpdateVersion { get; set; }
     [JsonPropertyName("autoRefreshPaused")] public bool AutoRefreshPaused { get; set; }
 
+    /// <summary>屏幕右侧的浮标：托盘图标被收起来时，靠它看有没有流水线在跑。</summary>
+    [JsonPropertyName("floatingBadgeEnabled")] public bool FloatingBadgeEnabled { get; set; } = true;
+
+    /// <summary>浮标所在的显示器（设备名，如 \\.\DISPLAY1）。空 = 主屏。</summary>
+    [JsonPropertyName("floatingBadgeScreen")] public string FloatingBadgeScreen { get; set; } = "";
+
+    /// <summary>浮标纵向位置：工作区高度的比例（0 = 顶端，1 = 底端）。</summary>
+    [JsonPropertyName("floatingBadgeTopRatio")] public double FloatingBadgeTopRatio { get; set; } = 0.5;
+
     /// <summary>上次成功检查更新的时间（24 小时内不再自动检查）。</summary>
     [JsonPropertyName("lastUpdateCheck")] public DateTime? LastUpdateCheck { get; set; }
 
