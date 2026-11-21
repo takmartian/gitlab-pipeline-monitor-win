@@ -102,6 +102,7 @@ tests/                             net8.0        零依赖测试 runner
 ```bash
 GitLabPipelineMonitor.exe --demo                 # 演示数据填充并打开面板（不联网也能看界面）
 GitLabPipelineMonitor.exe --updateprobe          # 打印 GitHub Release 最新版本 / 资产 / sha256
+GitLabPipelineMonitor.exe --updateui             # 回归探针：开着设置窗口跑一次更新检查（查跨线程异常）
 GitLabPipelineMonitor.exe --updateinstall        # 端到端验证下载 → 校验 → 解压链路
 GitLabPipelineMonitor.exe --selftest             # 关键逻辑自检
 GitLabPipelineMonitor.exe --probebrush           # 主题画刷的可变性探针（见「托盘菜单为什么是自绘的」）
@@ -180,6 +181,34 @@ GitLabPipelineMonitor.exe --capture out.png traymenu # 弹出托盘右键菜单�
 - **占位文字会盖在真值上**：占位提示的显隐读的是输入框的 `Text`，
   而构造函数里绑定还没把已保存的地址灌进来，只在那儿算一次的话提示会一直亮着、
   和真实地址叠成两行。现在改成跟着 `TextChanged` 走，绑定推值时也会收起。
+
+## 线程约定：状态在后台线程，界面在 UI 线程
+
+Core（`AppState` / `AppSettings`）跑在后台线程上：网络请求在异步方法里，
+状态一改就抛 `PropertyChanged`。而订阅这些事件的界面代码会去动
+`ObservableCollection`、`TextBox`、依赖属性 —— 这些都**只能在 UI 线程上做**。
+硬来会得到两种报错：
+
+- 「调用线程无法访问此对象，因为另一个线程拥有该对象」
+- 「该类型的 CollectionView 不支持从调度程序线程以外的线程对其 SourceCollection 进行的更改」
+
+所以规矩有三条：
+
+1. **Core 那边不用管线程**：它只管改状态、抛通知。
+2. **界面那边统一用 `UiThread.Run(...)` 搬运**（`src/GitLabPipelineMonitor/UiThread.cs`）。
+   面板的分组列表、设置窗口的项目行、详情页和运行页的按钮状态都走这一条路。
+3. **`UpdateManager` 的状态只能在 UI 线程上改**：`Phase` 和下载进度会直接绑到
+   设置窗口的界面上，所以 `CheckAsync` / `InstallAsync` 里的 `await` **不能加
+   `ConfigureAwait(false)`** —— 加了续体就留在后台线程，改 `Phase` 时订阅者一动
+   界面元素就炸。
+
+`--updateui` 是这条约定的回归探针：开着设置窗口跑一次强制更新检查，
+复现条件与当初的崩溃完全一致。
+
+`--updateprobe` 踩的是同一个坑的另一面：诊断跑在 UI 线程上，
+`await` 的续体要回 Dispatcher 执行，所以**不能**用 `GetAwaiter().GetResult()` 干等
+（UI 线程一卡，续体永远等不到，症状是只打印两行然后进程挂死）。
+`Diagnostics.RunDiagnostic` 用嵌套的 `DispatcherFrame` 边等边转消息循环。
 
 ## 别把真实信息写进仓库
 

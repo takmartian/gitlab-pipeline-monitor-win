@@ -232,7 +232,8 @@ public partial class PipelineDetailView : UserControl
     private void State_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(GitLabPipelineMonitor.Core.AppState.BusyAction))
-            UpdateBusyState();
+            // BusyAction 是在后台线程上改的，按钮状态只能在 UI 线程上更新
+            UiThread.Run(UpdateBusyState);
     }
 
     private void UpdateBusyState()

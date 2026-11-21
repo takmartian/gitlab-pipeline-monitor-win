@@ -67,8 +67,9 @@ public sealed class UpdateManager : ObservableObject, IDisposable
     /// <summary>启动后延迟几秒查一次，之后每 6 小时看一眼（本地缓存 24 小时，不会碰限流）。</summary>
     public void Start()
     {
-        _ = Task.Delay(TimeSpan.FromSeconds(4)).ContinueWith(async _ =>
-            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() => CheckAsync(force: false)));
+        // 4 秒的延迟在后台线程上等，等完再把检查搬回 UI 线程
+        _ = Task.Delay(TimeSpan.FromSeconds(4)).ContinueWith(_ =>
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(() => _ = CheckAsync(force: false)));
 
         _timer = new DispatcherTimer { Interval = TimeSpan.FromHours(6) };
         _timer.Tick += async (_, _) => await CheckAsync(force: false);
@@ -85,6 +86,14 @@ public sealed class UpdateManager : ObservableObject, IDisposable
     /// <summary>检查更新。自动检查受「通用 - 自动更新」开关控制；手动检查（force）不受影响。</summary>
     public async Task CheckAsync(bool force)
     {
+        // Phase / 下载进度会被设置窗口直接绑到界面上，这些状态只能在 UI 线程上改。
+        // 后台线程进来的调用先整体搬回 UI 线程，免得又出现「调用线程无法访问此对象」。
+        if (!UiThread.IsCurrent)
+        {
+            await UiThread.RunAsync(() => CheckAsync(force));
+            return;
+        }
+
         if (Phase == UpdatePhase.Checking) return;
         if (!force && !_settings.AutoUpdateEnabled) return;
         if (!force && _settings.LastUpdateCheck is { } last
@@ -94,7 +103,10 @@ public sealed class UpdateManager : ObservableObject, IDisposable
         PhaseMessage = null;
         try
         {
-            var latest = await FetchLatestReleaseAsync().ConfigureAwait(false);
+            // 这里刻意不加 ConfigureAwait(false)：续体要回到 UI 线程，
+            // 否则下面的 Phase 赋值会在后台线程上触发 PropertyChanged，
+            // 订阅者（设置窗口）一动界面元素就抛「调用线程无法访问此对象」。
+            var latest = await FetchLatestReleaseAsync();
             Release = latest;
             _settings.LastUpdateCheck = DateTime.Now;
 
@@ -225,6 +237,13 @@ public sealed class UpdateManager : ObservableObject, IDisposable
 
     public async Task InstallAsync()
     {
+        // 和 CheckAsync 同一个道理：状态只能在 UI 线程上改
+        if (!UiThread.IsCurrent)
+        {
+            await UiThread.RunAsync(InstallAsync);
+            return;
+        }
+
         var release = Release;
         var asset = release?.PreferredAsset;
         if (release is null || asset is null) return;
@@ -239,12 +258,12 @@ public sealed class UpdateManager : ObservableObject, IDisposable
             Directory.CreateDirectory(work);
             var zipPath = Path.Combine(work, "update.zip");
 
-            await DownloadWithProgressAsync(asset.BrowserDownloadUrl, zipPath).ConfigureAwait(false);
+            await DownloadWithProgressAsync(asset.BrowserDownloadUrl, zipPath);
             if (string.IsNullOrEmpty(asset.Digest) || !asset.Digest.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase))
                 throw new GitLabException(GitLabErrorKind.Decoding, "missing digest");
 
             var expected = asset.Digest[7..].ToLowerInvariant();
-            var actual = await ComputeSha256Async(zipPath).ConfigureAwait(false);
+            var actual = await ComputeSha256Async(zipPath);
             if (!string.Equals(expected, actual, StringComparison.Ordinal))
                 throw new GitLabException(GitLabErrorKind.Decoding, "checksum");
 

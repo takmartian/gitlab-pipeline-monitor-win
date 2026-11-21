@@ -48,6 +48,10 @@ public partial class App : Application
 
         // 单实例：已经在跑就把已有面板叫到前台，不要开第二份托盘图标
         _instanceMutex = new System.Threading.Mutex(true, "GitLabPipelineMonitor_SingleInstance", out var createdNew);
+        // createdNew=false 时只是「打开」了同名互斥体，并没有拿到所有权。
+        // 这种情况下退出时不能 ReleaseMutex，否则抛
+        // ApplicationException: Object synchronization method was called from an unsynchronized block of code.
+        _ownsInstanceMutex = createdNew;
         if (!createdNew)
         {
             MessageBox.Show(Loc.T("GitLab Pipeline Monitor 已经在运行了（看屏幕右下角的系统托盘）。"),
@@ -58,7 +62,7 @@ public partial class App : Application
 
         _host = new WindowsHost();
         AppInfo.Version = GetType().Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
-        AppInfo.Build = "5";
+        AppInfo.Build = "6";
 
         _settings = new AppSettings(_host);
         Loc.Language = _settings.Language;
@@ -92,6 +96,9 @@ public partial class App : Application
 
     private System.Threading.Mutex? _instanceMutex;
 
+    /// <summary>这份实例是否真的持有了单实例互斥体。只有持有者才能 ReleaseMutex。</summary>
+    private bool _ownsInstanceMutex;
+
     /// <summary>面板要拿宿主能力（打开链接、复制剪贴板）。</summary>
     public WindowsHost GetHost() => _host!;
 
@@ -114,7 +121,12 @@ public partial class App : Application
         _tray?.Dispose();
         _state?.Dispose();
         _updater?.Dispose();
-        _instanceMutex?.ReleaseMutex();
+        // 第二份实例没拿到互斥体的所有权，释放它会抛异常 —— 只在持有时释放
+        if (_ownsInstanceMutex)
+        {
+            try { _instanceMutex?.ReleaseMutex(); }
+            catch (ApplicationException) { /* 不是本线程拿到的，忽略 */ }
+        }
         _instanceMutex?.Dispose();
         base.OnExit(e);
     }

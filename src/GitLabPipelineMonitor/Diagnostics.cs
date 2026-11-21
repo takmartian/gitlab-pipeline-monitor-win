@@ -37,8 +37,9 @@ public static class Diagnostics
         // 从 cmd 启动的 WinExe 默认没有控制台句柄，附加父控制台才能把输出打出来
         AttachConsole(AttachParentConsole);
 
-        if (Has(args, "--updateprobe")) { ProbeAsync(updater).GetAwaiter().GetResult(); return true; }
-        if (Has(args, "--updateinstall")) { InstallProbeAsync(updater).GetAwaiter().GetResult(); return true; }
+        if (Has(args, "--updateprobe")) { RunDiagnostic(() => ProbeAsync(updater)); return true; }
+        if (Has(args, "--updateui")) { RunDiagnostic(() => UpdateUiProbeAsync(state, settings, updater)); return true; }
+        if (Has(args, "--updateinstall")) { RunDiagnostic(() => InstallProbeAsync(updater)); return true; }
         if (Has(args, "--selftest")) { SelfTest(state, settings); return true; }
         if (Has(args, "--probebrush")) { Line("· 画刷探针：" + ThemeManager.Probe()); return true; }
         if (Has(args, "--probebox")) { ProbeComboBox(); return true; }
@@ -88,6 +89,31 @@ public static class Diagnostics
 
     // MARK: --updateprobe
 
+    /// <summary>
+    /// 诊断命令要「跑完再退出」，但不能用 GetAwaiter().GetResult() 干等。
+    /// 诊断跑在 UI 线程上，而 await 的续体要回到 Dispatcher 上执行；
+    /// UI 线程一旦被 GetResult 卡住，续体就永远等不到 ——
+    /// 症状是只打印了前两行然后进程挂死。
+    /// 这里开一个嵌套消息循环：边等边转 Dispatcher，续体才有机会跑完。
+    /// </summary>
+    private static void RunDiagnostic(Func<Task> body)
+    {
+        var task = body();
+        if (task.IsCompleted)
+        {
+            task.GetAwaiter().GetResult();
+            return;
+        }
+
+        var frame = new System.Windows.Threading.DispatcherFrame();
+        var poll = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
+        poll.Tick += (_, _) => { if (task.IsCompleted) frame.Continue = false; };
+        poll.Start();
+        System.Windows.Threading.Dispatcher.PushFrame(frame);
+        poll.Stop();
+        task.GetAwaiter().GetResult();
+    }
+
     private static async Task ProbeAsync(UpdateManager updater)
     {
         Line($"当前版本 {AppInfo.Version} (build {AppInfo.Build})");
@@ -110,6 +136,32 @@ public static class Diagnostics
         var preferred = release.PreferredAsset;
         Line(preferred is null ? "✗ 没有可用资产" : $"将下载 {preferred.BrowserDownloadUrl}");
         Line($"有更新: {updater.LatestVersion is not null} · 最新 {updater.LatestVersion ?? "无"}");
+    }
+
+    // MARK: --updateui
+
+    /// <summary>
+    /// 「更新检查 + 设置窗口同开」的跨线程回归探针。
+    ///
+    /// 历史 bug：UpdateManager.CheckAsync 用了 ConfigureAwait(false)，await 之后的代码
+    /// 留在后台线程，Phase 一改就抛 PropertyChanged；设置窗口收到后直接读 TextBox.Text，
+    /// 抛「调用线程无法访问此对象，因为另一个线程拥有该对象」。
+    /// 这里开一个设置窗口再跑一次强制检查，复现条件完全一致 —— 不崩就是修好了。
+    /// </summary>
+    private static async Task UpdateUiProbeAsync(Core.AppState state, AppSettings settings, UpdateManager updater)
+    {
+        var host = ((App)System.Windows.Application.Current).GetHost();
+        var window = new Views.SettingsWindow(state, settings, updater, host, Views.SettingsTab.About);
+        window.Show();
+        try
+        {
+            await updater.CheckAsync(force: true);
+            Line($"✓ 更新检查完成，阶段 {updater.Phase}（设置窗口全程开着，没有跨线程异常）");
+        }
+        finally
+        {
+            window.Close();
+        }
     }
 
     // MARK: --updateinstall

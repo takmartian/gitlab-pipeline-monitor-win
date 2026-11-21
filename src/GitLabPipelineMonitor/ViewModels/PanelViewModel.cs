@@ -128,6 +128,10 @@ public sealed class PanelViewModel : ObservableObject
 
         _state.PropertyChanged += (_, e) =>
         {
+            // Core 的刷新跑在线程池上，PropertyChanged 也是从那儿抛的。
+            // Groups 是 ObservableCollection、列表控件盯着它，从后台线程改会抛
+            // 「该类型的 CollectionView 不支持从调度程序线程以外的线程对其 SourceCollection 进行的更改」。
+            // 所以一律搬回 UI 线程再动界面。
             switch (e.PropertyName)
             {
                 case nameof(Core.AppState.Pipelines):
@@ -139,19 +143,23 @@ public sealed class PanelViewModel : ObservableObject
                 case nameof(Core.AppState.IsLoadingPipelines):
                 case nameof(Core.AppState.IsLoadingProjects):
                 case nameof(Core.AppState.User):
-                    Rebuild();
+                    QueueRebuild();
                     break;
                 case nameof(Core.AppState.ActionMessage):
-                    ShowToast(_state.ActionMessage);
-                    _state.ActionMessage = null;
-                    break;
+                    {
+                        // 消息要在清空前取走：ShowToast 得回 UI 线程，晚一步就可能被下一条覆盖
+                        var message = _state.ActionMessage;
+                        _state.ActionMessage = null;
+                        UiThread.Run(() => ShowToast(message));
+                        break;
+                    }
             }
         };
         _settings.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName is nameof(AppSettings.OnlyStarred) or nameof(AppSettings.MonitoredProjectIds)
                 or nameof(AppSettings.ServerUrl) or nameof(AppSettings.Token) or nameof(AppSettings.RefreshInterval))
-                Rebuild();
+                QueueRebuild();
         };
 
         Rebuild();
@@ -171,6 +179,17 @@ public sealed class PanelViewModel : ObservableObject
 
     public IReadOnlyDictionary<StatusFilter, int> LastCounts { get; private set; } =
         StatusFilterExtensions.AllCases.ToDictionary(f => f, _ => 0);
+
+    /// <summary>已经排了一次重建没？一轮刷新会连着抛好几个 PropertyChanged，合并成一次重建。</summary>
+    private volatile bool _rebuildQueued;
+
+    /// <summary>把重建排到 UI 线程上跑。</summary>
+    private void QueueRebuild()
+    {
+        if (_rebuildQueued) return;
+        _rebuildQueued = true;
+        UiThread.Run(() => { _rebuildQueued = false; Rebuild(); });
+    }
 
     public void Rebuild()
     {

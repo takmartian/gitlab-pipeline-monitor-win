@@ -422,7 +422,15 @@ public partial class SettingsWindow : Window
     private void State_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (!_ready) return;
-        switch (e.PropertyName)
+        // Core 的状态是在后台线程上改的，PropertyChanged 也从那儿抛过来。
+        // 这里动的是 ProjectRows（ObservableCollection）和输入框，必须回 UI 线程。
+        UiThread.Run(() => HandleStateChanged(e.PropertyName));
+    }
+
+    private void HandleStateChanged(string? name)
+    {
+        if (!_ready) return;
+        switch (name)
         {
             case nameof(AppState.StarredProjects):
             case nameof(AppState.MemberProjects):
@@ -440,7 +448,14 @@ public partial class SettingsWindow : Window
     private void Settings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (!_ready) return;
-        switch (e.PropertyName)
+        // 设置也可能被后台线程改（比如首次拉取后自动带上星标项目），同样要回 UI 线程
+        UiThread.Run(() => HandleSettingsChanged(e.PropertyName));
+    }
+
+    private void HandleSettingsChanged(string? name)
+    {
+        if (!_ready) return;
+        switch (name)
         {
             case nameof(AppSettings.MonitoredProjectIds):
                 foreach (var row in ProjectRows) row.RefreshMonitored();
@@ -461,7 +476,8 @@ public partial class SettingsWindow : Window
         RefreshDynamic();
     }
 
-    private void Updater_PropertyChanged(object? sender, PropertyChangedEventArgs e) => RefreshDynamic();
+    private void Updater_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        => UiThread.Run(RefreshDynamic);
 
     // MARK: - 动态文案
 
