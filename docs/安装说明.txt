@@ -17,6 +17,10 @@ GitLab Pipeline Monitor for Windows
 程序出现在屏幕右下角的系统托盘里（Win11 可能折叠在「显示隐藏的图标」箭头里）。
 左键点击托盘图标打开面板，右键可以刷新、进设置、检查更新、退出。
 
+屏幕右边缘还有一根小细条（屏幕浮标）：托盘图标被折叠起来时，就靠它看有没有流水线在跑 ——
+有流水线在跑会变蓝并脉动，失败会变红。鼠标移上去能看到在跑/失败的清单，点一下打开完整面板。
+可以直接拖到别的屏幕，松手会吸到那块屏的右边缘；不想要的话在「设置 → 通用 → 屏幕浮标」里关掉。
+
 【数据在哪】
 设置：%APPDATA%\GitLab Pipeline Monitor\settings.json
 令牌：%APPDATA%\GitLab Pipeline Monitor\tokens.json（AES-GCM 加密，密钥来自本机 MachineGuid + 你的登录名）
