@@ -1,0 +1,68 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 应用 logo：矢量重画版。
+
+         为什么不用 Assets/app.ico：WPF 加载 .ico 时会解码成「第一帧」，
+         而 app.ico 的第一帧是 16×16 —— <Image Source="...app.ico" Width="72">
+         实际上是把 16×16 放大到 72 DIP，所以「关于」页那个图标糊成一团。
+         这里按 app.ico 的比例重画成矢量，任何尺寸都是清晰的。
+
+         比例取自 app.ico 的 256×256 帧（256 见方的画布）：
+           底座    圆角方块 (15,15)-(241,241)，圆角半径 44，纵向渐变 #1F2027 → #121318
+           节点圆  半径 29，左上 (78.5,76.5) 橙、右上 (176.5,76.5) 红、下 (127.5,183.5) 浅黄
+           连杆    宽 16.4 的斜条，从下圆心连到两个上圆心，颜色 #969BAA
+         绘制顺序：底座 → 连杆 → 圆（圆压住杆的端头）。 -->
+
+    <LinearGradientBrush x:Key="Logo.BackdropBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#1F2027" />
+        <GradientStop Offset="1" Color="#121318" />
+    </LinearGradientBrush>
+
+    <DrawingImage x:Key="Logo.Image">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="{StaticResource Logo.BackdropBrush}">
+                    <GeometryDrawing.Geometry>
+                        <RectangleGeometry Rect="15,15,226,226" RadiusX="44" RadiusY="44" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+
+                <!-- 左边那根连杆 -->
+                <GeometryDrawing Brush="#969BAA">
+                    <GeometryDrawing.Geometry>
+                        <PathGeometry Figures="M134.95,180.09 L85.95,73.09 L71.05,79.91 L120.05,186.91 Z" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+
+                <!-- 右边那根连杆 -->
+                <GeometryDrawing Brush="#969BAA">
+                    <GeometryDrawing.Geometry>
+                        <PathGeometry Figures="M120.05,180.09 L169.05,73.09 L183.95,79.91 L134.95,186.91 Z" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+
+                <!-- 左上节点 -->
+                <GeometryDrawing Brush="#F5A624">
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="78.5,76.5" RadiusX="29" RadiusY="29" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+
+                <!-- 右上节点 -->
+                <GeometryDrawing Brush="#F04545">
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="176.5,76.5" RadiusX="29" RadiusY="29" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+
+                <!-- 下方节点 -->
+                <GeometryDrawing Brush="#FFD666">
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="127.5,183.5" RadiusX="29" RadiusY="29" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+</ResourceDictionary>

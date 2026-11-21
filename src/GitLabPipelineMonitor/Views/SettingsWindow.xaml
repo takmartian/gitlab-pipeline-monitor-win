@@ -452,8 +452,10 @@
         <TabItem loc:LocalizedText.Source="关于">
             <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,10,0,0">
                 <StackPanel Margin="24,10,24,12">
-                    <Image Source="/Assets/app.ico" Width="72" Height="72" HorizontalAlignment="Center"
-                           Margin="0,6,0,10" RenderOptions.BitmapScalingMode="HighQuality" />
+                    <!-- 用矢量 logo（Theme/Logo.xaml）：直接引 app.ico 的话，
+                         WPF 只会解出第一帧 16×16，放大到 72 DIP 就是马赛克 -->
+                    <Image Source="{StaticResource Logo.Image}" Width="72" Height="72" HorizontalAlignment="Center"
+                           Margin="0,6,0,10" />
                     <TextBlock x:Name="AboutNameText" FontSize="17" FontWeight="Bold" TextAlignment="Center"
                                Foreground="{DynamicResource PanelForegroundBrush}" />
                     <TextBlock x:Name="AboutVersionText" FontSize="11" TextAlignment="Center" Margin="0,3,0,0"

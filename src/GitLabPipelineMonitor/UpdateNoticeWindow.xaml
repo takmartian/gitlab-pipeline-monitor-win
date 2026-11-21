@@ -22,8 +22,8 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Image Grid.Column="0" Source="/Assets/app.ico" Width="40" Height="40" Margin="0,0,12,0"
-                   VerticalAlignment="Top" RenderOptions.BitmapScalingMode="HighQuality" />
+            <Image Grid.Column="0" Source="{StaticResource Logo.Image}" Width="40" Height="40" Margin="0,0,12,0"
+                   VerticalAlignment="Top" />
             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                 <TextBlock x:Name="TitleText" FontSize="15" FontWeight="SemiBold"
                            Foreground="{DynamicResource PanelForegroundBrush}" />

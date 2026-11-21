@@ -8,6 +8,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Theme/Colors.xaml" />
                 <ResourceDictionary Source="Theme/Icons.xaml" />
+                <ResourceDictionary Source="Theme/Logo.xaml" />
                 <!-- Widgets.xaml 必须在 Controls.xaml 之前：Controls 里的 FieldInput 用
                      BasedOn 取这里的隐式 TextBox 样式，而 StaticResource 只能找到已加载的字典，
                      顺序放反编译期不报、运行时才抛 XamlParseException -->
