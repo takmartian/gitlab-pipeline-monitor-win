@@ -268,14 +268,20 @@
                                                         <Button Grid.Column="0" Style="{StaticResource IconButton}"
                                                                 Width="22" Height="22" Click="StarRow_Click"
                                                                 ToolTip="{Binding StarTip}">
-                                                            <Grid Width="12" Height="12">
-                                                                <Path Fill="{DynamicResource StarBrush}"
-                                                                      Data="{StaticResource Icon.Star}"
-                                                                      Visibility="{Binding Starred, Converter={StaticResource BoolToVis}}" />
-                                                                <Path Fill="{DynamicResource TertiaryTextBrush}"
-                                                                      Data="{StaticResource Icon.StarOutline}"
-                                                                      Visibility="{Binding Starred, Converter={StaticResource InvBoolToVis}}" />
-                                                            </Grid>
+                                                            <Viewbox Width="12" Height="12">
+                                                                <!-- 几何在 24x24 视图里，必须用 Viewbox 缩到 12x12：
+                                                                     直接把 Path 放进 Grid 的话，Grid 的隐式列会按几何的
+                                                                     原始尺寸（20x19）撑开，Path 就按原尺寸画并溢出、被裁掉，
+                                                                     星形只剩左上角一块。 -->
+                                                                <Grid>
+                                                                    <Path Fill="{DynamicResource StarBrush}"
+                                                                          Data="{StaticResource Icon.Star}"
+                                                                          Visibility="{Binding Starred, Converter={StaticResource BoolToVis}}" />
+                                                                    <Path Fill="{DynamicResource TertiaryTextBrush}"
+                                                                          Data="{StaticResource Icon.StarOutline}"
+                                                                          Visibility="{Binding Starred, Converter={StaticResource InvBoolToVis}}" />
+                                                                </Grid>
+                                                            </Viewbox>
                                                         </Button>
                                                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="4,0,6,0">
                                                             <TextBlock Text="{Binding Name}" FontSize="12"
