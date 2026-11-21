@@ -121,8 +121,15 @@ public sealed class TrayIcon : IDisposable
         _ = _panel.Dispatcher.InvokeAsync(() => _icon.ShowBalloonTip(4000, title, body, ToolTipIcon.None));
     }
 
-    /// <summary>从嵌入资源里取 exe 图标作为托盘图标的基础形状。</summary>
-    private static Drawing.Icon LoadDefaultIcon()
+    /// <summary>托盘图标当前用的是哪一份，写进启动日志便于排查「图标看不见」这类问题。</summary>
+    public string IconDescription { get; private set; } = "未创建";
+
+    /// <summary>
+    /// 托盘图标的基础形状。按可靠程度依次尝试：
+    /// exe 里嵌入的图标 → 程序集里的 ico 资源 → 运行时画的图形 → 系统通用图标。
+    /// 任何一步失败都要有下一档兜底，托盘图标没了整个应用就等于没了。
+    /// </summary>
+    private Drawing.Icon LoadDefaultIcon()
     {
         try
         {
@@ -130,10 +137,30 @@ public sealed class TrayIcon : IDisposable
             if (!string.IsNullOrEmpty(path) && File.Exists(path))
             {
                 var extracted = Drawing.Icon.ExtractAssociatedIcon(path);
-                if (extracted is not null) return extracted;
+                if (extracted is not null && extracted.Width > 0)
+                {
+                    IconDescription = $"exe 关联图标 {extracted.Width}x{extracted.Height}";
+                    return extracted;
+                }
             }
         }
-        catch (Exception) { /* 拿不到就用下面画的 */ }
+        catch (Exception) { /* 换下一档 */ }
+
+        try
+        {
+            // 程序集里打包的 Assets/app.ico，比 exe 关联图标更可靠（单文件发布时也一定在）
+            var uri = new Uri("pack://application:,,,/Assets/app.ico", UriKind.Absolute);
+            var stream = WpfApplication.GetResourceStream(uri);
+            if (stream is not null)
+            {
+                var icon = new Drawing.Icon(stream.Stream);
+                IconDescription = $"内嵌 ico {icon.Width}x{icon.Height}";
+                return icon;
+            }
+        }
+        catch (Exception) { /* 换下一档 */ }
+
+        IconDescription = "系统通用图标";
         return Drawing.SystemIcons.Application;
     }
 

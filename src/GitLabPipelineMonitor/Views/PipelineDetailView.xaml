@@ -1,7 +1,7 @@
 <UserControl x:Class="GitLabPipelineMonitor.PipelineDetailView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Background="{StaticResource PanelBackgroundBrush}"
+             Background="{DynamicResource PanelBackgroundBrush}"
              TextOptions.TextFormattingMode="Display" UseLayoutRounding="True">
 
     <UserControl.Resources>
@@ -58,21 +58,21 @@
                 <StackPanel Grid.Column="1" Margin="6,0,4,0" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding Name}" FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="170"
-                                   Foreground="{StaticResource PanelForegroundBrush}" VerticalAlignment="Center" />
+                                   Foreground="{DynamicResource PanelForegroundBrush}" VerticalAlignment="Center" />
                         <Border Margin="5,0,0,0" CornerRadius="4" Padding="4,1" VerticalAlignment="Center"
-                                Background="{StaticResource FieldBackgroundBrush}"
+                                Background="{DynamicResource FieldBackgroundBrush}"
                                 Visibility="{Binding ShowAllowFailure, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding AllowFailureLabel}" FontSize="9" Foreground="{StaticResource SecondaryTextBrush}" />
+                            <TextBlock Text="{Binding AllowFailureLabel}" FontSize="9" Foreground="{DynamicResource SecondaryTextBrush}" />
                         </Border>
                     </StackPanel>
-                    <TextBlock Text="{Binding FailureReasonText}" FontSize="9" Foreground="{StaticResource FailedBrush}"
+                    <TextBlock Text="{Binding FailureReasonText}" FontSize="9" Foreground="{DynamicResource FailedBrush}"
                                TextTrimming="CharacterEllipsis" Margin="0,1,0,0"
                                Visibility="{Binding HasFailure, Converter={StaticResource BoolToVis}}" />
                 </StackPanel>
 
                 <Grid Grid.Column="2" VerticalAlignment="Center" MinWidth="46">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <TextBlock Text="{Binding DurationText}" FontSize="9" Foreground="{StaticResource TertiaryTextBrush}"
+                        <TextBlock Text="{Binding DurationText}" FontSize="9" Foreground="{DynamicResource TertiaryTextBrush}"
                                    VerticalAlignment="Center" Margin="0,0,4,0"
                                    Visibility="{Binding HasDuration, Converter={StaticResource BoolToVis}}" />
                         <ProgressBar Width="12" Height="12" IsIndeterminate="True" VerticalAlignment="Center" Margin="0,0,2,0"
@@ -82,21 +82,21 @@
                                     Click="RetryJob_Click" Tag="{Binding}" ToolTip="{Binding TipRetry}"
                                     Visibility="{Binding CanRetry, Converter={StaticResource BoolToVis}}">
                                 <Viewbox Width="10" Height="10">
-                                    <Path Fill="{StaticResource PanelForegroundBrush}" Data="{StaticResource Icon.Refresh}" />
+                                    <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.Refresh}" />
                                 </Viewbox>
                             </Button>
                             <Button Style="{StaticResource IconButton}" Width="20" Height="18" Margin="1,0"
                                     Click="CancelJob_Click" Tag="{Binding}" ToolTip="{Binding TipCancel}"
                                     Visibility="{Binding CanCancel, Converter={StaticResource BoolToVis}}">
                                 <Viewbox Width="10" Height="10">
-                                    <Path Fill="{StaticResource PanelForegroundBrush}" Data="{StaticResource Icon.Stop}" />
+                                    <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.Stop}" />
                                 </Viewbox>
                             </Button>
                             <Button Style="{StaticResource IconButton}" Width="20" Height="18" Margin="1,0,0,0"
                                     Click="OpenJob_Click" Tag="{Binding}" ToolTip="{Binding TipOpen}"
                                     Visibility="{Binding HasUrl, Converter={StaticResource BoolToVis}}">
                                 <Viewbox Width="10" Height="10">
-                                    <Path Fill="{StaticResource PanelForegroundBrush}" Data="{StaticResource Icon.Open}" />
+                                    <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.Open}" />
                                 </Viewbox>
                             </Button>
                         </StackPanel>
@@ -115,7 +115,7 @@
         <DataTemplate x:Key="StageTemplate">
             <StackPanel Margin="0,0,0,8">
                 <TextBlock Text="{Binding Name}" FontSize="9" FontWeight="SemiBold"
-                           Foreground="{StaticResource TertiaryTextBrush}" Margin="5,0,0,3" />
+                           Foreground="{DynamicResource TertiaryTextBrush}" Margin="5,0,0,3" />
                 <ItemsControl ItemsSource="{Binding Jobs}" ItemTemplate="{StaticResource JobTemplate}" />
             </StackPanel>
         </DataTemplate>
@@ -131,7 +131,7 @@
         </Grid.RowDefinitions>
 
         <!-- ===== 顶栏：返回 + 标题 + 状态 ===== -->
-        <Grid Grid.Row="0" Background="{StaticResource BarBackgroundBrush}" Margin="10,8">
+        <Grid Grid.Row="0" Background="{DynamicResource BarBackgroundBrush}" Margin="10,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -142,7 +142,7 @@
             <Button x:Name="BackBtn" Grid.Column="0" Style="{StaticResource IconButton}" Width="24" Height="22"
                     HorizontalAlignment="Left" Click="Back_Click">
                 <Viewbox Width="12" Height="12">
-                    <Path Fill="{StaticResource PanelForegroundBrush}" Data="{StaticResource Icon.ChevronRight}"
+                    <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.ChevronRight}"
                           RenderTransformOrigin="0.5,0.5">
                         <Path.RenderTransform>
                             <RotateTransform Angle="180" />
@@ -152,9 +152,9 @@
             </Button>
 
             <StackPanel Grid.Column="1" Margin="6,0,8,0" VerticalAlignment="Center">
-                <TextBlock x:Name="TitleText" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource PanelForegroundBrush}" />
+                <TextBlock x:Name="TitleText" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PanelForegroundBrush}" />
                 <TextBlock x:Name="PathText" FontSize="9" TextTrimming="CharacterEllipsis"
-                           Foreground="{StaticResource TertiaryTextBrush}" />
+                           Foreground="{DynamicResource TertiaryTextBrush}" />
             </StackPanel>
 
             <Path x:Name="HeaderStatusIcon" Grid.Column="2" Width="15" Height="15" Stretch="Uniform"
@@ -162,7 +162,7 @@
             <TextBlock x:Name="HeaderText" Grid.Column="3" FontSize="11" FontWeight="Medium" VerticalAlignment="Center" />
         </Grid>
 
-        <Border Grid.Row="1" Height="1" Background="{StaticResource HairlineBrush}" />
+        <Border Grid.Row="1" Height="1" Background="{DynamicResource HairlineBrush}" />
 
         <!-- ===== 主体：概要 / 提交信息 / 作业 ===== -->
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="10">
@@ -193,23 +193,23 @@
 
                             <!-- 分支 -->
                             <TextBlock x:Name="KeyBranch" Grid.Row="0" Grid.Column="0" FontSize="10" Margin="0,3"
-                                       Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                                       Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
                             <DockPanel Grid.Row="0" Grid.Column="1" LastChildFill="True">
                                 <Button x:Name="CopyRefBtn" DockPanel.Dock="Right" Style="{StaticResource IconButton}"
                                         Width="18" Height="16" Click="CopyRef_Click">
                                     <Viewbox Width="9" Height="9">
-                                        <Path Fill="{StaticResource TertiaryTextBrush}" Data="{StaticResource Icon.Copy}" />
+                                        <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.Copy}" />
                                     </Viewbox>
                                 </Button>
                                 <TextBlock x:Name="ValRef" FontSize="11" FontWeight="Medium" TextTrimming="CharacterEllipsis"
-                                           Foreground="{StaticResource PanelForegroundBrush}" VerticalAlignment="Center" />
+                                           Foreground="{DynamicResource PanelForegroundBrush}" VerticalAlignment="Center" />
                             </DockPanel>
 
                             <!-- 提交 -->
                             <TextBlock x:Name="KeyCommit" Grid.Row="1" Grid.Column="0" FontSize="10" Margin="0,3"
-                                       Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                                       Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
                             <TextBlock x:Name="ValSha" Grid.Row="1" Grid.Column="1" FontSize="11" VerticalAlignment="Center"
-                                       FontFamily="Consolas, Courier New" Foreground="{StaticResource PanelForegroundBrush}" />
+                                       FontFamily="Consolas, Courier New" Foreground="{DynamicResource PanelForegroundBrush}" />
 
                             <!-- 名称 -->
                             <Grid x:Name="RowName" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,3" Visibility="Collapsed">
@@ -217,9 +217,9 @@
                                     <ColumnDefinition Width="56" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="KeyName" FontSize="10" Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                                <TextBlock x:Name="KeyName" FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
                                 <TextBlock x:Name="ValName" Grid.Column="1" FontSize="11" TextTrimming="CharacterEllipsis"
-                                           Foreground="{StaticResource PanelForegroundBrush}" VerticalAlignment="Center" />
+                                           Foreground="{DynamicResource PanelForegroundBrush}" VerticalAlignment="Center" />
                             </Grid>
 
                             <!-- 触发方式 -->
@@ -228,9 +228,9 @@
                                     <ColumnDefinition Width="56" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="KeySource" FontSize="10" Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                                <TextBlock x:Name="KeySource" FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
                                 <TextBlock x:Name="ValSource" Grid.Column="1" FontSize="11" TextTrimming="CharacterEllipsis"
-                                           Foreground="{StaticResource PanelForegroundBrush}" VerticalAlignment="Center" />
+                                           Foreground="{DynamicResource PanelForegroundBrush}" VerticalAlignment="Center" />
                             </Grid>
 
                             <!-- 作者（触发人） -->
@@ -239,9 +239,9 @@
                                     <ColumnDefinition Width="56" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="KeyUser" FontSize="10" Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                                <TextBlock x:Name="KeyUser" FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
                                 <TextBlock x:Name="ValUser" Grid.Column="1" FontSize="11" TextTrimming="CharacterEllipsis"
-                                           Foreground="{StaticResource PanelForegroundBrush}" VerticalAlignment="Center" />
+                                           Foreground="{DynamicResource PanelForegroundBrush}" VerticalAlignment="Center" />
                             </Grid>
 
                             <!-- 耗时 -->
@@ -250,9 +250,9 @@
                                     <ColumnDefinition Width="56" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="KeyDuration" FontSize="10" Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                                <TextBlock x:Name="KeyDuration" FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
                                 <TextBlock x:Name="ValDuration" Grid.Column="1" FontSize="11"
-                                           Foreground="{StaticResource PanelForegroundBrush}" VerticalAlignment="Center" />
+                                           Foreground="{DynamicResource PanelForegroundBrush}" VerticalAlignment="Center" />
                             </Grid>
 
                             <!-- 开始时间 -->
@@ -261,9 +261,9 @@
                                     <ColumnDefinition Width="56" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="KeyStarted" FontSize="10" Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                                <TextBlock x:Name="KeyStarted" FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
                                 <TextBlock x:Name="ValStarted" Grid.Column="1" FontSize="11"
-                                           Foreground="{StaticResource PanelForegroundBrush}" VerticalAlignment="Center" />
+                                           Foreground="{DynamicResource PanelForegroundBrush}" VerticalAlignment="Center" />
                             </Grid>
 
                             <!-- 结束时间 -->
@@ -272,9 +272,9 @@
                                     <ColumnDefinition Width="56" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="KeyFinished" FontSize="10" Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                                <TextBlock x:Name="KeyFinished" FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
                                 <TextBlock x:Name="ValFinished" Grid.Column="1" FontSize="11"
-                                           Foreground="{StaticResource PanelForegroundBrush}" VerticalAlignment="Center" />
+                                           Foreground="{DynamicResource PanelForegroundBrush}" VerticalAlignment="Center" />
                             </Grid>
 
                             <!-- 创建时间 -->
@@ -283,9 +283,9 @@
                                     <ColumnDefinition Width="56" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="KeyCreated" FontSize="10" Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                                <TextBlock x:Name="KeyCreated" FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
                                 <TextBlock x:Name="ValCreated" Grid.Column="1" FontSize="11"
-                                           Foreground="{StaticResource PanelForegroundBrush}" VerticalAlignment="Center" />
+                                           Foreground="{DynamicResource PanelForegroundBrush}" VerticalAlignment="Center" />
                             </Grid>
 
                             <!-- 更新时间 -->
@@ -294,9 +294,9 @@
                                     <ColumnDefinition Width="56" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="KeyUpdated" FontSize="10" Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                                <TextBlock x:Name="KeyUpdated" FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
                                 <TextBlock x:Name="ValUpdated" Grid.Column="1" FontSize="11"
-                                           Foreground="{StaticResource PanelForegroundBrush}" VerticalAlignment="Center" />
+                                           Foreground="{DynamicResource PanelForegroundBrush}" VerticalAlignment="Center" />
                             </Grid>
 
                             <!-- 覆盖率 -->
@@ -305,9 +305,9 @@
                                     <ColumnDefinition Width="56" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="KeyCoverage" FontSize="10" Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                                <TextBlock x:Name="KeyCoverage" FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
                                 <TextBlock x:Name="ValCoverage" Grid.Column="1" FontSize="11"
-                                           Foreground="{StaticResource PanelForegroundBrush}" VerticalAlignment="Center" />
+                                           Foreground="{DynamicResource PanelForegroundBrush}" VerticalAlignment="Center" />
                             </Grid>
                         </Grid>
                     </StackPanel>
@@ -318,11 +318,11 @@
                     <StackPanel>
                         <TextBlock x:Name="CommitTitle" Style="{StaticResource SectionTitle}" />
                         <TextBlock x:Name="CommitTitleText" FontSize="11" FontWeight="Medium" TextWrapping="Wrap"
-                                   Foreground="{StaticResource PanelForegroundBrush}" />
+                                   Foreground="{DynamicResource PanelForegroundBrush}" />
                         <TextBlock x:Name="CommitAuthor" FontSize="10" Margin="0,3,0,0"
-                                   Foreground="{StaticResource SecondaryTextBrush}" Visibility="Collapsed" />
+                                   Foreground="{DynamicResource SecondaryTextBrush}" Visibility="Collapsed" />
                         <TextBlock x:Name="CommitTime" FontSize="10" Margin="0,1,0,0"
-                                   Foreground="{StaticResource TertiaryTextBrush}" Visibility="Collapsed" />
+                                   Foreground="{DynamicResource TertiaryTextBrush}" Visibility="Collapsed" />
                     </StackPanel>
                 </Border>
 
@@ -333,7 +333,7 @@
 
                         <StackPanel x:Name="JobsLoading" Orientation="Horizontal" Margin="5,2" Visibility="Collapsed">
                             <ProgressBar Width="14" Height="14" IsIndeterminate="True" VerticalAlignment="Center" Margin="0,0,6,0" />
-                            <TextBlock x:Name="JobsLoadingText" FontSize="11" Foreground="{StaticResource SecondaryTextBrush}"
+                            <TextBlock x:Name="JobsLoadingText" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
 
@@ -344,16 +344,16 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <Viewbox Width="10" Height="10" Margin="0,2,5,0" VerticalAlignment="Top">
-                                <Path Fill="{StaticResource BlockedBrush}" Data="{StaticResource Icon.Alert}" />
+                                <Path Fill="{DynamicResource BlockedBrush}" Data="{StaticResource Icon.Alert}" />
                             </Viewbox>
                             <TextBlock x:Name="JobsErrorText" Grid.Column="1" FontSize="10" TextWrapping="Wrap"
-                                       Foreground="{StaticResource SecondaryTextBrush}" />
+                                       Foreground="{DynamicResource SecondaryTextBrush}" />
                             <Button x:Name="JobsRetryBtn" Grid.Column="2" FontSize="11" Padding="8,2" Margin="6,0,0,0"
                                     VerticalAlignment="Top" Click="RetryJobs_Click" />
                         </Grid>
 
                         <TextBlock x:Name="JobsEmpty" FontSize="11" Margin="5,2" Visibility="Collapsed"
-                                   Foreground="{StaticResource TertiaryTextBrush}" />
+                                   Foreground="{DynamicResource TertiaryTextBrush}" />
 
                         <ItemsControl x:Name="JobsList" ItemTemplate="{StaticResource StageTemplate}" Visibility="Collapsed" />
                     </StackPanel>
@@ -361,15 +361,15 @@
             </StackPanel>
         </ScrollViewer>
 
-        <Border Grid.Row="3" Height="1" Background="{StaticResource HairlineBrush}" />
+        <Border Grid.Row="3" Height="1" Background="{DynamicResource HairlineBrush}" />
 
         <!-- ===== 底部操作 ===== -->
-        <Grid Grid.Row="4" Background="{StaticResource BarBackgroundBrush}" Margin="10,6">
+        <Grid Grid.Row="4" Background="{DynamicResource BarBackgroundBrush}" Margin="10,6">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <Button x:Name="RetryBtn" FontSize="11" Padding="8,3" Click="RetryPipeline_Click">
                     <StackPanel Orientation="Horizontal">
                         <Viewbox Width="10" Height="10" Margin="0,0,5,0">
-                            <Path Fill="{StaticResource PanelForegroundBrush}" Data="{StaticResource Icon.Refresh}" />
+                            <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.Refresh}" />
                         </Viewbox>
                         <TextBlock x:Name="RetryBtnText" VerticalAlignment="Center" />
                     </StackPanel>
@@ -377,7 +377,7 @@
                 <Button x:Name="CancelBtn" FontSize="11" Padding="8,3" Margin="6,0,0,0" Click="CancelPipeline_Click">
                     <StackPanel Orientation="Horizontal">
                         <Viewbox Width="9" Height="9" Margin="0,0,5,0">
-                            <Path Fill="{StaticResource PanelForegroundBrush}" Data="{StaticResource Icon.Stop}" />
+                            <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.Stop}" />
                         </Viewbox>
                         <TextBlock x:Name="CancelBtnText" VerticalAlignment="Center" />
                     </StackPanel>
@@ -388,7 +388,7 @@
             <Button x:Name="OpenBtn" HorizontalAlignment="Right" FontSize="11" Padding="8,3" Click="OpenPipelinePage_Click">
                 <StackPanel Orientation="Horizontal">
                     <Viewbox Width="10" Height="10" Margin="0,0,5,0">
-                        <Path Fill="{StaticResource PanelForegroundBrush}" Data="{StaticResource Icon.Open}" />
+                        <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.Open}" />
                     </Viewbox>
                     <TextBlock x:Name="OpenBtnText" VerticalAlignment="Center" />
                 </StackPanel>

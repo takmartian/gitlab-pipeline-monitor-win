@@ -4,7 +4,7 @@
         Title="更新" Width="460" Height="440"
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="False" ResizeMode="CanResize"
-        Background="{StaticResource PanelBackgroundBrush}"
+        Background="{DynamicResource PanelBackgroundBrush}"
         TextOptions.TextFormattingMode="Display" UseLayoutRounding="True">
     <Grid Margin="0">
         <Grid.RowDefinitions>
@@ -25,23 +25,23 @@
                    VerticalAlignment="Top" RenderOptions.BitmapScalingMode="HighQuality" />
             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                 <TextBlock x:Name="TitleText" FontSize="15" FontWeight="SemiBold"
-                           Foreground="{StaticResource PanelForegroundBrush}" />
+                           Foreground="{DynamicResource PanelForegroundBrush}" />
                 <TextBlock x:Name="CurrentText" FontSize="11" Margin="0,2,0,0"
-                           Foreground="{StaticResource SecondaryTextBrush}" />
+                           Foreground="{DynamicResource SecondaryTextBrush}" />
             </StackPanel>
         </Grid>
 
-        <Border Grid.Row="1" Height="1" Background="{StaticResource HairlineBrush}" />
+        <Border Grid.Row="1" Height="1" Background="{DynamicResource HairlineBrush}" />
 
         <!-- 更新说明：可滚动、可选中复制 -->
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="16,12,16,12">
             <TextBox x:Name="NotesText" IsReadOnly="True" BorderThickness="0" Background="Transparent"
                      TextWrapping="Wrap" FontSize="12.5"
                      VerticalScrollBarVisibility="Disabled"
-                     Foreground="{StaticResource PanelForegroundBrush}" />
+                     Foreground="{DynamicResource PanelForegroundBrush}" />
         </ScrollViewer>
 
-        <Border Grid.Row="3" Height="1" Background="{StaticResource HairlineBrush}" />
+        <Border Grid.Row="3" Height="1" Background="{DynamicResource HairlineBrush}" />
 
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="16,12,16,14">
             <Button x:Name="IgnoreButton" Content="忽略此版本" MinWidth="96" Height="26" Margin="0,0,10,0"

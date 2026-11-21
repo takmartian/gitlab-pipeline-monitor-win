@@ -38,16 +38,16 @@
         <DataTemplate x:Key="MetaItem">
             <StackPanel Orientation="Horizontal" Margin="0,0,9,0">
                 <Path Width="9" Height="9" Stretch="Uniform" Margin="0,0,3,0"
-                      Fill="{StaticResource TertiaryTextBrush}" Data="{Binding Icon}" VerticalAlignment="Center" />
-                <TextBlock Text="{Binding Text}" FontSize="10.5" Foreground="{StaticResource TertiaryTextBrush}"
+                      Fill="{DynamicResource TertiaryTextBrush}" Data="{Binding Icon}" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Text}" FontSize="10.5" Foreground="{DynamicResource TertiaryTextBrush}"
                            TextTrimming="CharacterEllipsis" MaxWidth="110" VerticalAlignment="Center" />
             </StackPanel>
         </DataTemplate>
     </Window.Resources>
 
     <!-- 外面套一层 Border 做描边和阴影，托盘面板要有明确的边界 -->
-    <Border BorderThickness="1" BorderBrush="{StaticResource HairlineBrush}" CornerRadius="0"
-            Background="{StaticResource PanelBackgroundBrush}">
+    <Border BorderThickness="1" BorderBrush="{DynamicResource HairlineBrush}" CornerRadius="0"
+            Background="{DynamicResource PanelBackgroundBrush}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -59,7 +59,7 @@
             </Grid.RowDefinitions>
 
             <!-- ===== 顶栏 ===== -->
-            <Grid Grid.Row="0" Background="{StaticResource BarBackgroundBrush}" Margin="10,8">
+            <Grid Grid.Row="0" Background="{DynamicResource BarBackgroundBrush}" Margin="10,8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -69,22 +69,22 @@
                 </Grid.ColumnDefinitions>
 
                 <Border Grid.Column="0" Width="26" Height="26" CornerRadius="6" Margin="0,0,9,0"
-                        Background="{StaticResource FieldBackgroundBrush}">
+                        Background="{DynamicResource FieldBackgroundBrush}">
                     <Viewbox Width="15" Height="15">
-                        <Path Fill="{StaticResource RunningBrush}" Data="{StaticResource Icon.Pipeline}" />
+                        <Path Fill="{DynamicResource RunningBrush}" Data="{StaticResource Icon.Pipeline}" />
                     </Viewbox>
                 </Border>
 
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <TextBlock Text="{Binding HeaderHost}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
-                               Foreground="{StaticResource PanelForegroundBrush}" />
+                               Foreground="{DynamicResource PanelForegroundBrush}" />
                     <TextBlock Text="{Binding HeaderSubtitle}" FontSize="10" TextTrimming="CharacterEllipsis"
-                               Foreground="{StaticResource SecondaryTextBrush}">
+                               Foreground="{DynamicResource SecondaryTextBrush}">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding HeaderSubtitleIsError}" Value="True">
-                                        <Setter Property="Foreground" Value="{StaticResource FailedBrush}" />
+                                        <Setter Property="Foreground" Value="{DynamicResource FailedBrush}" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -99,13 +99,13 @@
                 <Button Grid.Column="3" Style="{StaticResource IconButton}" Width="24" Height="22" Margin="1,0"
                         Click="Refresh_Click" ToolTip="刷新">
                     <Viewbox Width="12" Height="12">
-                        <Path Fill="{StaticResource PanelForegroundBrush}" Data="{StaticResource Icon.Refresh}" />
+                        <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.Refresh}" />
                     </Viewbox>
                 </Button>
                 <Button Grid.Column="4" Style="{StaticResource IconButton}" Width="24" Height="22" Margin="1,0,0,0"
                         Click="Settings_Click" ToolTip="设置">
                     <Viewbox Width="12" Height="12">
-                        <Path Fill="{StaticResource PanelForegroundBrush}" Data="{StaticResource Icon.Settings}" />
+                        <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.Settings}" />
                     </Viewbox>
                 </Button>
             </Grid>
@@ -121,10 +121,10 @@
                     <TextBox x:Name="SearchBox" Style="{StaticResource SearchBox}" Padding="26,4,22,4"
                              Text="{Binding Query, UpdateSourceTrigger=PropertyChanged, Delay=120}" />
                     <Viewbox Width="11" Height="11" HorizontalAlignment="Left" Margin="8,0,0,0">
-                        <Path Fill="{StaticResource TertiaryTextBrush}" Data="{StaticResource Icon.Search}" />
+                        <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.Search}" />
                     </Viewbox>
                     <TextBlock Text="搜索 · 项目 / 分支" FontSize="12" Margin="26,0,0,0" VerticalAlignment="Center"
-                               Foreground="{StaticResource TertiaryTextBrush}" IsHitTestVisible="False">
+                               Foreground="{DynamicResource TertiaryTextBrush}" IsHitTestVisible="False">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Visibility" Value="Collapsed" />
@@ -139,7 +139,7 @@
                     <Button Width="18" Height="18" HorizontalAlignment="Right" Margin="0,0,5,0"
                             Style="{StaticResource IconButton}" Click="ClearSearch_Click" ToolTip="清空">
                         <Viewbox Width="10" Height="10">
-                            <Path Fill="{StaticResource TertiaryTextBrush}" Data="{StaticResource Icon.Close}" />
+                            <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.Close}" />
                         </Viewbox>
                     </Button>
                 </Grid>
@@ -170,15 +170,15 @@
                     </ItemsControl>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <Viewbox Width="9" Height="9" Margin="0,0,4,0">
-                            <Path Fill="{StaticResource TertiaryTextBrush}" Data="{StaticResource Icon.Timer}" />
+                            <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.Timer}" />
                         </Viewbox>
-                        <TextBlock Text="{Binding TimerLabel}" FontSize="9" Foreground="{StaticResource TertiaryTextBrush}"
+                        <TextBlock Text="{Binding TimerLabel}" FontSize="9" Foreground="{DynamicResource TertiaryTextBrush}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                 </Grid>
             </Grid>
 
-            <Border Grid.Row="2" Height="1" Background="{StaticResource HairlineBrush}" />
+            <Border Grid.Row="2" Height="1" Background="{DynamicResource HairlineBrush}" />
 
             <!-- ===== 主体：分组列表 ===== -->
             <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
@@ -203,48 +203,48 @@
                                     <Button Grid.Column="0" Style="{StaticResource IconButton}" Width="16" Height="16"
                                             Margin="2,0,4,0" Click="ToggleCollapse_Click" Tag="{Binding Project.Id}">
                                         <Viewbox Width="8" Height="8">
-                                            <Path Fill="{StaticResource TertiaryTextBrush}" Data="{StaticResource Icon.ChevronDown}" />
+                                            <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.ChevronDown}" />
                                         </Viewbox>
                                     </Button>
 
                                     <Viewbox Grid.Column="1" Width="9" Height="9" Margin="0,0,6,0" VerticalAlignment="Center"
                                              Visibility="{Binding Starred, Converter={StaticResource BoolToVis}}">
-                                        <Path Fill="{StaticResource StarBrush}" Data="{StaticResource Icon.Star}" />
+                                        <Path Fill="{DynamicResource StarBrush}" Data="{StaticResource Icon.Star}" />
                                     </Viewbox>
 
                                     <StackPanel Grid.Column="2" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold"
                                                    TextTrimming="CharacterEllipsis"
-                                                   Foreground="{StaticResource PanelForegroundBrush}" />
+                                                   Foreground="{DynamicResource PanelForegroundBrush}" />
                                         <TextBlock Text="{Binding Subtitle}" FontSize="9" Height="11"
                                                    TextTrimming="CharacterEllipsis"
-                                                   Foreground="{StaticResource TertiaryTextBrush}"
+                                                   Foreground="{DynamicResource TertiaryTextBrush}"
                                                    Visibility="{Binding ShowSubtitle, Converter={StaticResource BoolToVis}}" />
                                     </StackPanel>
 
                                     <Border Grid.Column="3" CornerRadius="4" Padding="4,1" Margin="4,0" VerticalAlignment="Center"
-                                            Background="{StaticResource FieldBackgroundBrush}"
+                                            Background="{DynamicResource FieldBackgroundBrush}"
                                             Visibility="{Binding ShowArchived, Converter={StaticResource BoolToVis}}">
-                                        <TextBlock Text="归档" FontSize="9" Foreground="{StaticResource SecondaryTextBrush}" />
+                                        <TextBlock Text="归档" FontSize="9" Foreground="{DynamicResource SecondaryTextBrush}" />
                                     </Border>
 
                                     <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,4,0">
                                         <Path Width="11" Height="11" Margin="0,0,4,0" Style="{StaticResource StatusIconPath}"
                                               DataContext="{Binding Latest}" />
                                         <TextBlock Text="{Binding LatestTime}" FontSize="9"
-                                                   Foreground="{StaticResource TertiaryTextBrush}" VerticalAlignment="Center" />
+                                                   Foreground="{DynamicResource TertiaryTextBrush}" VerticalAlignment="Center" />
                                     </StackPanel>
 
                                     <Button Grid.Column="5" Style="{StaticResource IconButton}" Width="20" Height="18"
                                             Click="StarProject_Click" Tag="{Binding Project.Id}" ToolTip="打星 / 取消打星">
                                         <Viewbox Width="10" Height="10">
-                                            <Path Fill="{StaticResource StarBrush}" Data="{StaticResource Icon.StarOutline}" />
+                                            <Path Fill="{DynamicResource StarBrush}" Data="{StaticResource Icon.StarOutline}" />
                                         </Viewbox>
                                     </Button>
                                     <Button Grid.Column="6" Style="{StaticResource IconButton}" Width="20" Height="18"
                                             Click="RunPipeline_Click" Tag="{Binding Project.Id}" ToolTip="运行新流水线">
                                         <Viewbox Width="11" Height="11">
-                                            <Path Fill="{StaticResource PanelForegroundBrush}" Data="{StaticResource Icon.Play}" />
+                                            <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.Play}" />
                                         </Viewbox>
                                     </Button>
                                 </Grid>
@@ -280,55 +280,55 @@
                                                     <StackPanel Grid.Column="1" Margin="6,0,4,0">
                                                         <StackPanel Orientation="Horizontal">
                                                             <Viewbox Width="8" Height="8" Margin="0,0,4,0" VerticalAlignment="Center">
-                                                                <Path Fill="{StaticResource TertiaryTextBrush}" Data="{StaticResource Icon.Branch}" />
+                                                                <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.Branch}" />
                                                             </Viewbox>
                                                             <TextBlock Text="{Binding Ref}" FontSize="11.5" FontWeight="Medium"
                                                                        TextTrimming="CharacterEllipsis" MaxWidth="150"
-                                                                       Foreground="{StaticResource PanelForegroundBrush}" />
+                                                                       Foreground="{DynamicResource PanelForegroundBrush}" />
                                                             <TextBlock Text="{Binding Iid, StringFormat=#{0}}" FontSize="10"
-                                                                       Margin="6,0,0,0" Foreground="{StaticResource TertiaryTextBrush}" />
+                                                                       Margin="6,0,0,0" Foreground="{DynamicResource TertiaryTextBrush}" />
                                                             <TextBlock Text="{Binding Name}" FontSize="10" Margin="6,0,0,0"
                                                                        TextTrimming="CharacterEllipsis" MaxWidth="90"
-                                                                       Foreground="{StaticResource SecondaryTextBrush}" />
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}" />
                                                         </StackPanel>
                                                         <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
                                                             <StackPanel Orientation="Horizontal" Margin="0,0,9,0">
                                                                 <Viewbox Width="8" Height="8" Margin="0,0,3,0" VerticalAlignment="Center">
-                                                                    <Path Fill="{StaticResource TertiaryTextBrush}" Data="{StaticResource Icon.Box}" />
+                                                                    <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.Box}" />
                                                                 </Viewbox>
                                                                 <TextBlock Text="{Binding ShortSha}" FontSize="10"
-                                                                           Foreground="{StaticResource TertiaryTextBrush}" />
+                                                                           Foreground="{DynamicResource TertiaryTextBrush}" />
                                                             </StackPanel>
                                                             <StackPanel Orientation="Horizontal" Margin="0,0,9,0">
                                                                 <Viewbox Width="8" Height="8" Margin="0,0,3,0" VerticalAlignment="Center">
-                                                                    <Path Fill="{StaticResource TertiaryTextBrush}" Data="{StaticResource Icon.Clock}" />
+                                                                    <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.Clock}" />
                                                                 </Viewbox>
                                                                 <TextBlock Text="{Binding RelativeTime}" FontSize="10"
-                                                                           Foreground="{StaticResource TertiaryTextBrush}" />
+                                                                           Foreground="{DynamicResource TertiaryTextBrush}" />
                                                             </StackPanel>
                                                             <StackPanel Orientation="Horizontal" Margin="0,0,9,0"
                                                                           Visibility="{Binding HasDuration, Converter={StaticResource BoolToVis}}">
                                                                 <Viewbox Width="8" Height="8" Margin="0,0,3,0" VerticalAlignment="Center">
-                                                                    <Path Fill="{StaticResource TertiaryTextBrush}" Data="{StaticResource Icon.Stopwatch}" />
+                                                                    <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.Stopwatch}" />
                                                                 </Viewbox>
                                                                 <TextBlock Text="{Binding DurationText}" FontSize="10"
-                                                                           Foreground="{StaticResource TertiaryTextBrush}" />
+                                                                           Foreground="{DynamicResource TertiaryTextBrush}" />
                                                             </StackPanel>
                                                             <StackPanel Orientation="Horizontal" Margin="0,0,9,0"
                                                                           Visibility="{Binding HasCoverage, Converter={StaticResource BoolToVis}}">
                                                                 <Viewbox Width="8" Height="8" Margin="0,0,3,0" VerticalAlignment="Center">
-                                                                    <Path Fill="{StaticResource TertiaryTextBrush}" Data="{StaticResource Icon.Seal}" />
+                                                                    <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.Seal}" />
                                                                 </Viewbox>
                                                                 <TextBlock Text="{Binding Coverage}" FontSize="10"
-                                                                           Foreground="{StaticResource TertiaryTextBrush}" />
+                                                                           Foreground="{DynamicResource TertiaryTextBrush}" />
                                                             </StackPanel>
                                                             <StackPanel Orientation="Horizontal"
                                                                           Visibility="{Binding HasUser, Converter={StaticResource BoolToVis}}">
                                                                 <Viewbox Width="8" Height="8" Margin="0,0,3,0" VerticalAlignment="Center">
-                                                                    <Path Fill="{StaticResource TertiaryTextBrush}" Data="{StaticResource Icon.Person}" />
+                                                                    <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.Person}" />
                                                                 </Viewbox>
                                                                 <TextBlock Text="{Binding UserName}" FontSize="10"
-                                                                           Foreground="{StaticResource TertiaryTextBrush}" />
+                                                                           Foreground="{DynamicResource TertiaryTextBrush}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </StackPanel>
@@ -343,19 +343,19 @@
                                                             <Button Style="{StaticResource IconButton}" Width="22" Height="20"
                                                                     Click="RetryRow_Click" Tag="{Binding Id}" ToolTip="重试">
                                                                 <Viewbox Width="11" Height="11">
-                                                                    <Path Fill="{StaticResource PanelForegroundBrush}" Data="{StaticResource Icon.Refresh}" />
+                                                                    <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.Refresh}" />
                                                                 </Viewbox>
                                                             </Button>
                                                             <Button Style="{StaticResource IconButton}" Width="22" Height="20"
                                                                     Click="CancelRow_Click" Tag="{Binding Id}" ToolTip="取消">
                                                                 <Viewbox Width="10" Height="10">
-                                                                    <Path Fill="{StaticResource PanelForegroundBrush}" Data="{StaticResource Icon.Stop}" />
+                                                                    <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.Stop}" />
                                                                 </Viewbox>
                                                             </Button>
                                                             <Button Style="{StaticResource IconButton}" Width="22" Height="20"
                                                                     Click="OpenPipeline_Click" Tag="{Binding Id}" ToolTip="详情">
                                                                 <Viewbox Width="9" Height="9">
-                                                                    <Path Fill="{StaticResource PanelForegroundBrush}" Data="{StaticResource Icon.ChevronRight}" />
+                                                                    <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.ChevronRight}" />
                                                                 </Viewbox>
                                                             </Button>
                                                         </StackPanel>
@@ -375,13 +375,13 @@
                                 <StackPanel Orientation="Horizontal" Margin="30,2,6,4"
                                             Visibility="{Binding ShowError, Converter={StaticResource BoolToVis}}">
                                     <Viewbox Width="9" Height="9" Margin="0,0,5,0">
-                                        <Path Fill="{StaticResource BlockedBrush}" Data="{StaticResource Icon.Alert}" />
+                                        <Path Fill="{DynamicResource BlockedBrush}" Data="{StaticResource Icon.Alert}" />
                                     </Viewbox>
                                     <TextBlock Text="{Binding Error}" FontSize="10" TextTrimming="CharacterEllipsis"
-                                               Foreground="{StaticResource SecondaryTextBrush}" />
+                                               Foreground="{DynamicResource SecondaryTextBrush}" />
                                 </StackPanel>
 
-                                <Border Height="1" Background="{StaticResource HairlineBrush}" Margin="30,2,0,0" Opacity="0.5" />
+                                <Border Height="1" Background="{DynamicResource HairlineBrush}" Margin="30,2,0,0" Opacity="0.5" />
                             </StackPanel>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
@@ -392,35 +392,35 @@
             <Grid Grid.Row="3" Visibility="{Binding ShowEmpty, Converter={StaticResource BoolToVis}}" Margin="24">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                     <Viewbox Width="34" Height="34" HorizontalAlignment="Center" Margin="0,0,0,10">
-                        <Path Fill="{StaticResource TertiaryTextBrush}"
+                        <Path Fill="{DynamicResource TertiaryTextBrush}"
                               Data="{Binding EmptyIconKey, Converter={x:Static conv:IconResourceConverter.Instance}}" />
                     </Viewbox>
                     <TextBlock Text="{Binding EmptyTitle}" FontSize="13" FontWeight="SemiBold" TextAlignment="Center"
-                               Foreground="{StaticResource PanelForegroundBrush}" />
+                               Foreground="{DynamicResource PanelForegroundBrush}" />
                     <TextBlock Text="{Binding EmptyMessage}" FontSize="11" TextAlignment="Center" TextWrapping="Wrap"
-                               Margin="0,6,0,0" MaxWidth="280" Foreground="{StaticResource SecondaryTextBrush}" />
+                               Margin="0,6,0,0" MaxWidth="280" Foreground="{DynamicResource SecondaryTextBrush}" />
                     <Button Content="{Binding EmptyAction}" Height="24" MinWidth="80" Margin="0,10,0,0"
                             HorizontalAlignment="Center" Style="{StaticResource AccentButtonStyle}"
                             Click="EmptyAction_Click" Visibility="{Binding EmptyAction, Converter={StaticResource StrToVis}}" />
                 </StackPanel>
             </Grid>
 
-            <Border Grid.Row="4" Height="1" Background="{StaticResource HairlineBrush}" />
+            <Border Grid.Row="4" Height="1" Background="{DynamicResource HairlineBrush}" />
 
             <!-- ===== 底栏 ===== -->
-            <Grid Grid.Row="5" Background="{StaticResource BarBackgroundBrush}" Margin="10,6" Height="26">
+            <Grid Grid.Row="5" Background="{DynamicResource BarBackgroundBrush}" Margin="10,6" Height="26">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Viewbox Width="9" Height="9" Margin="0,0,5,0">
-                        <Path Fill="{StaticResource TertiaryTextBrush}" Data="{StaticResource Icon.Clock}" />
+                        <Path Fill="{DynamicResource TertiaryTextBrush}" Data="{StaticResource Icon.Clock}" />
                     </Viewbox>
-                    <TextBlock Text="{Binding FooterUpdated}" FontSize="10" Foreground="{StaticResource TertiaryTextBrush}" />
+                    <TextBlock Text="{Binding FooterUpdated}" FontSize="10" Foreground="{DynamicResource TertiaryTextBrush}" />
                 </StackPanel>
                 <TextBlock Text="{Binding FooterSummary}" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"
-                           Foreground="{StaticResource TertiaryTextBrush}" />
+                           Foreground="{DynamicResource TertiaryTextBrush}" />
                 <Button Style="{StaticResource IconButton}" Width="24" Height="22" HorizontalAlignment="Right"
                         Click="OpenGitLab_Click" ToolTip="打开 GitLab">
                     <Viewbox Width="11" Height="11">
-                        <Path Fill="{StaticResource PanelForegroundBrush}" Data="{StaticResource Icon.Open}" />
+                        <Path Fill="{DynamicResource PanelForegroundBrush}" Data="{StaticResource Icon.Open}" />
                     </Viewbox>
                 </Button>
             </Grid>
@@ -435,24 +435,24 @@
                     MouseLeftButtonUp="Grip_MouseUp" MouseLeave="Grip_MouseLeave"
                     ToolTip="拖动顶边调整高度，双击恢复默认">
                 <Border x:Name="GripMark" Width="40" Height="4" CornerRadius="2" Opacity="0"
-                        Background="{StaticResource TertiaryTextBrush}"
+                        Background="{DynamicResource TertiaryTextBrush}"
                         HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Border>
 
             <!-- 覆盖层：流水线详情 / 运行流水线 -->
-            <Grid x:Name="OverlayHost" Grid.Row="0" Grid.RowSpan="6" Background="{StaticResource PanelBackgroundBrush}"
+            <Grid x:Name="OverlayHost" Grid.Row="0" Grid.RowSpan="6" Background="{DynamicResource PanelBackgroundBrush}"
                   Visibility="Collapsed" />
 
             <!-- 操作反馈 toast -->
             <Border x:Name="ToastHost" Grid.Row="0" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="12,8"
-                    CornerRadius="8" Padding="10,7" Background="{StaticResource BarBackgroundBrush}"
-                    BorderThickness="0.5" BorderBrush="{StaticResource HairlineBrush}" Visibility="Collapsed">
+                    CornerRadius="8" Padding="10,7" Background="{DynamicResource BarBackgroundBrush}"
+                    BorderThickness="0.5" BorderBrush="{DynamicResource HairlineBrush}" Visibility="Collapsed">
                 <StackPanel Orientation="Horizontal">
                     <Viewbox Width="12" Height="12" Margin="0,0,6,0">
-                        <Path x:Name="ToastIcon" Fill="{StaticResource FailedBrush}" Data="{StaticResource Icon.Alert}" />
+                        <Path x:Name="ToastIcon" Fill="{DynamicResource FailedBrush}" Data="{StaticResource Icon.Alert}" />
                     </Viewbox>
                     <TextBlock x:Name="ToastText" FontSize="11" MaxWidth="300" TextWrapping="Wrap"
-                               Foreground="{StaticResource PanelForegroundBrush}" />
+                               Foreground="{DynamicResource PanelForegroundBrush}" />
                 </StackPanel>
             </Border>
         </Grid>

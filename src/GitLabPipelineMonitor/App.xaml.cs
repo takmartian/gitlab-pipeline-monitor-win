@@ -27,6 +27,22 @@ public partial class App : Application
         // 越早装越好：连启动阶段的错误也要能留下现场，而不是弹系统崩溃框
         CrashGuard.Install(new WindowsHost());
 
+        // 启动过程整体兜住。托盘程序一旦半初始化（起了进程却没图标）是最难查的状态，
+        // 所以这里失败就弹窗说清楚并退出，绝不静默继续。
+        try
+        {
+            StartCore(e);
+        }
+        catch (Exception error)
+        {
+            CrashGuard.Write("启动", error, fatal: true);
+            CrashGuard.ShowDialog(error);
+            Shutdown();
+        }
+    }
+
+    private void StartCore(StartupEventArgs e)
+    {
         // 先上色再建窗口：面板、设置、菜单都引用同一批画刷对象，这里定完深浅后面不用再管
         ThemeManager.Install();
 
@@ -42,7 +58,7 @@ public partial class App : Application
 
         _host = new WindowsHost();
         AppInfo.Version = GetType().Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
-        AppInfo.Build = "3";
+        AppInfo.Build = "4";
 
         _settings = new AppSettings(_host);
         Loc.Language = _settings.Language;
@@ -52,6 +68,8 @@ public partial class App : Application
 
         _panel = new PanelWindow(_state, _settings, _updater);
         _tray = new TrayIcon(_state, _settings, _updater, _panel, _host);
+        // 托盘建起来了：之后的异常可以用气泡通知告诉用户
+        CrashGuard.TrayReady = true;
 
         // 诊断模式：抓完屏/跑完探针就退，不进托盘
         if (Diagnostics.RunIfRequested(e.Args, _state, _settings, _updater, _panel))
@@ -62,6 +80,14 @@ public partial class App : Application
 
         _state.Bootstrap();
         _updater.Start();
+
+        // 记一行启动现场：主题判定、强调色、托盘图标来源。
+        // 以后出怪问题，把 error.log 发过来就能看出是哪一步不对。
+        CrashGuard.Log("启动完成",
+            $"版本 {AppInfo.Version} · 深浅 {(ThemeManager.IsDark ? "深" : "浅")}"
+            + $" · 任务栏 {(ThemeManager.TaskbarIsLight ? "浅" : "深")}"
+            + $" · 强调色 {ThemeManager.Accent}"
+            + $" · 托盘图标 {_tray.IconDescription}");
     }
 
     private System.Threading.Mutex? _instanceMutex;

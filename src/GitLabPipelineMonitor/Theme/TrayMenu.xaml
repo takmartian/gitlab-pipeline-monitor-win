@@ -14,14 +14,14 @@
     <Style TargetType="ContextMenu">
         <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
         <Setter Property="FontSize" Value="12" />
-        <Setter Property="Foreground" Value="{StaticResource PanelForegroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PanelForegroundBrush}" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ContextMenu">
                     <Border Margin="10" CornerRadius="7" Padding="4"
-                            Background="{StaticResource PopupBackgroundBrush}"
-                            BorderBrush="{StaticResource PopupBorderBrush}"
+                            Background="{DynamicResource PopupBackgroundBrush}"
+                            BorderBrush="{DynamicResource PopupBorderBrush}"
                             BorderThickness="1">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="18" ShadowDepth="1.5" Opacity="0.25"
@@ -38,7 +38,7 @@
          高亮触发用 IsHighlighted：鼠标悬停和键盘上下键都会置位它，键盘导航同样有高亮反馈。
          勾选列只在 IsChecked 时占位；全应用现有菜单都没有子菜单，不画展开箭头。 -->
     <Style TargetType="MenuItem">
-        <Setter Property="Foreground" Value="{StaticResource PanelForegroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PanelForegroundBrush}" />
         <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="MinHeight" Value="32" />
@@ -66,13 +66,13 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
-                            <Setter TargetName="Item" Property="Background" Value="{StaticResource PopupHoverBrush}" />
+                            <Setter TargetName="Item" Property="Background" Value="{DynamicResource PopupHoverBrush}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="Check" Property="Visibility" Value="Visible" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Foreground" Value="{StaticResource TertiaryTextBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource TertiaryTextBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -85,7 +85,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Separator">
-                    <Border Height="1" Margin="8,4" Background="{StaticResource HairlineBrush}" />
+                    <Border Height="1" Margin="8,4" Background="{DynamicResource HairlineBrush}" />
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

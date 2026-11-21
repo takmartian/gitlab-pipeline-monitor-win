@@ -7,24 +7,41 @@ namespace GitLabPipelineMonitor;
 /// <summary>
 /// 明暗主题。WPF 的 SystemColors 在 Win11 上不会读「应用使用浅色主题」那个开关，
 /// 永远是浅色那套值 —— 所以深浅要自己判定、自己上色。
-/// 做法：Colors.xaml 里的画刷都不冻结，主题切换时直接改这些画刷对象的 Color，
-/// 所有已经加载的界面（StaticResource 引用着同一个画刷对象）会立刻跟着变。
+/// 
+/// 关键实现细节：这些画刷全部由本类用代码创建。XAML 里声明的 SolidColorBrush 会被
+/// WPF 自动冻结，冻结后改 Color 会抛 InvalidOperationException（曾导致启动即崩、
+/// 托盘图标建不起来）。画刷是全局唯一且不冻结的实例，改一次 Color，所有引用它的
+/// 界面立刻跟着变，不需要重新加载窗口。
 /// </summary>
 public static class ThemeManager
 {
     private const string PersonalizeKey = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
     private const string DwmKey = @"Software\Microsoft\Windows\DWM";
 
+    /// <summary>所有由代码托管的主题画刷。键名与 Theme/Colors.xaml 保持一致。</summary>
+    private static readonly string[] BrushKeys =
+    {
+        "PanelBackgroundBrush", "PanelForegroundBrush", "BarBackgroundBrush",
+        "SecondaryTextBrush", "TertiaryTextBrush", "RowHoverBrush",
+        "FieldBackgroundBrush", "HairlineBrush",
+        "PopupBackgroundBrush", "PopupBorderBrush", "PopupHoverBrush",
+        "AccentBrush", "AccentTextBrush",
+        "ControlBackgroundBrush", "ControlBorderBrush", "ControlHoverBrush",
+        "ControlPressedBrush", "DisabledTextBrush", "TabSelectedBrush", "ScrollThumbBrush",
+        "SuccessBrush", "FailedBrush", "RunningBrush", "PendingBrush",
+        "CanceledBrush", "ManualBrush", "BlockedBrush", "MutedBrush", "StarBrush",
+    };
+
     /// <summary>当前是不是深色主题（应用自己的深浅，看 AppsUseLightTheme）。</summary>
     public static bool IsDark { get; private set; }
 
     /// <summary>任务栏/托盘是不是浅色（SystemUsesLightTheme）—— 决定托盘图标画深线还是白线。</summary>
-    public static bool TaskbarIsLight { get; private set; }
+    public static bool TaskbarIsLight { get; private set; } = true;
 
     /// <summary>系统强调色，取不到就用 Windows 默认的蓝。</summary>
     public static Color Accent { get; private set; } = Color.FromRgb(0, 120, 212);
 
-    /// <summary>主题（明暗或强调色）变了。托盘图标的线条色取决于任务栏深浅，订阅这个重画。只加不改别的逻辑。</summary>
+    /// <summary>主题（明暗或强调色）变了。托盘图标的线条色取决于任务栏深浅，订阅这个重画。</summary>
     public static event Action? Changed;
 
     // SystemEvents 是静态事件，必须拿住委托引用，否则被 GC 后再也收不到通知
@@ -33,6 +50,7 @@ public static class ThemeManager
     /// <summary>读一次系统状态并把配色打到应用资源上；同时开始盯着主题切换。</summary>
     public static void Install()
     {
+        EnsureBrushes();
         RefreshFlags();
         Apply();
 
@@ -43,6 +61,27 @@ public static class ThemeManager
             Apply();
         };
         Microsoft.Win32.SystemEvents.UserPreferenceChanged += _watcher;
+    }
+
+    /// <summary>
+    /// 在应用资源里放上自己创建的画刷（不冻结）。放在应用级字典里，优先级高于合并进来的
+    /// Theme/Colors.xaml，所以 XAML 里引用同名键拿到的就是我们这份、可以随时改色的实例。
+    /// </summary>
+    private static void EnsureBrushes()
+    {
+        var app = System.Windows.Application.Current;
+        if (app is null) return;
+        foreach (var key in BrushKeys)
+        {
+            // 已经是自己建的未冻结实例（重复 Install）就复用
+            if (app.Resources[key] is SolidColorBrush existing && !existing.IsFrozen) continue;
+
+            // Colors.xaml 里那份可能是冻结的（XAML 声明的 Freezable 会被 WPF 自动冻结），
+            // 拿它的颜色起个新的未冻结画刷覆盖上去
+            var template = app.Resources[key] as SolidColorBrush;
+            var brush = new SolidColorBrush(template?.Color ?? Colors.Black);
+            app.Resources[key] = brush;
+        }
     }
 
     private static void RefreshFlags()
@@ -60,8 +99,8 @@ public static class ThemeManager
     }
 
     /// <summary>
-    /// 把当前主题的配色打到语义画刷上。画刷不冻结，改 Color 就等于全局生效 ——
-    /// 界面各处是 StaticResource 引用同一个画刷对象，不需要重新加载窗口。
+    /// 把当前主题的配色打到画刷上。画刷是全局唯一实例，改 Color 等于全局生效 ——
+    /// 界面各处引用的是同一个对象，不需要重新加载窗口。
     /// </summary>
     public static void Apply()
     {
@@ -82,6 +121,7 @@ public static class ThemeManager
         Paint("PopupBorderBrush", dark ? "#FFFFFF" : "#000000", dark ? 0.14 : 0.12);
         Paint("PopupHoverBrush", dark ? "#FFFFFF" : "#000000", dark ? 0.08 : 0.055);
         Paint("AccentBrush", ToHex(Accent), 1);
+        Paint("AccentTextBrush", "#FFFFFF", 1);
 
         // 控件外壳：WPF 自带主题在深色下仍是浅色，这几档由我们自己给
         Paint("ControlBackgroundBrush", dark ? "#2D2D2D" : "#FDFDFD", 1);
@@ -91,8 +131,6 @@ public static class ThemeManager
         Paint("DisabledTextBrush", dark ? "#FFFFFF" : "#000000", 0.36);
         Paint("TabSelectedBrush", dark ? "#FFFFFF" : "#000000", dark ? 0.08 : 0.06);
         Paint("ScrollThumbBrush", dark ? "#FFFFFF" : "#000000", 0.28);
-        // 强调色上永远放白字：Win11 浅色主题下强调色底也是白字
-        Paint("AccentTextBrush", "#FFFFFF", 1);
 
         // 状态色：浅色沿用与 macOS 版一致的取值，深色底上要提亮才跳得出来
         Paint("SuccessBrush", dark ? "#3DDC7A" : "#33B85C", 1);
@@ -109,10 +147,13 @@ public static class ThemeManager
         Changed?.Invoke();
     }
 
-    /// <summary>改一个画刷的颜色（带不透明度）。找不到 key 或值没变就跳过。</summary>
+    /// <summary>改一个画刷的颜色（把不透明度折算进 alpha，免得和 brush.Opacity 叠乘）。</summary>
     private static void Paint(string key, string hex, double opacity)
     {
-        if (Application.Current?.Resources[key] is not SolidColorBrush brush) return;
+        var app = System.Windows.Application.Current;
+        if (app is null) return;
+        if (app.Resources[key] is not SolidColorBrush brush) return;
+        if (brush.IsFrozen) return;   // 冻结的改不动；正常情况下这里不会命中
         var color = (Color)ColorConverter.ConvertFromString(hex);
         color.A = (byte)(255 * Math.Clamp(opacity, 0, 1));
         if (brush.Color == color) return;
@@ -139,4 +180,4 @@ public static class ThemeManager
         (byte)(from.B + (to.B - from.B) * amount));
 
     private static string ToHex(Color color) => $"#FF{color.R:X2}{color.G:X2}{color.B:X2}";
-};
+}

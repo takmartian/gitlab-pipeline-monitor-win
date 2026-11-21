@@ -167,8 +167,10 @@ public static class Diagnostics
     private static void SelfTest(Core.AppState state, AppSettings settings)
     {
         var failures = new List<string>();
+        var total = 0;
         void Check(string what, bool ok)
         {
+            total++;
             Line($"{(ok ? "✓" : "✗")} {what}");
             if (!ok) failures.Add(what);
         }
@@ -190,8 +192,12 @@ public static class Diagnostics
         Check("时长格式化", Fmt.Duration(192) == "3m 12s");
         Check("相对时间不为空", Fmt.Relative(DateTime.Now.AddMinutes(-5)).Length > 0);
         Check("演示数据已填充", state.StarredProjects.Count > 0 || !settings.DemoMode);
+        // 主题画刷必须是未冻结的实例，否则改不动颜色（这曾导致启动即崩、托盘图标建不起来）
+        var themeBrush = Application.Current?.Resources["PanelBackgroundBrush"] as System.Windows.Media.SolidColorBrush;
+        Check("主题画刷未冻结", themeBrush is not null && !themeBrush.IsFrozen);
+        Line($"· 主题：{(ThemeManager.IsDark ? "深色" : "浅色")} · 任务栏 {(ThemeManager.TaskbarIsLight ? "浅色" : "深色")} · 强调色 {ThemeManager.Accent}");
 
-        Line(failures.Count == 0 ? $"全部通过（{17} 项）" : $"失败 {failures.Count} 项");
+        Line(failures.Count == 0 ? $"全部通过（{total} 项）" : $"失败 {failures.Count} 项");
     }
 
     // MARK: --capture

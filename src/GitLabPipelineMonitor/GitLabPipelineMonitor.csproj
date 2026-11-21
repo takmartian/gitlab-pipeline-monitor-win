@@ -12,7 +12,7 @@
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <!-- 版本号只写这一处：SDK 会据此生成 AssemblyVersion / FileVersion，
          AppInfo.Version 读的正是 AssemblyVersion，更新检查靠它判断新旧 -->
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <!-- 在 macOS / Linux 上也能构建和交叉发布（这个项目就是这么做的） -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <!-- 默认发布成框架依赖版（见 build.sh）：包只有几 MB，运行时由用户装。

@@ -29,7 +29,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Box" Property="Background" Value="{StaticResource RowHoverBrush}" />
+                            <Setter TargetName="Box" Property="Background" Value="{DynamicResource RowHoverBrush}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.4" />
@@ -43,21 +43,21 @@
     <!-- 筛选胶囊：标题可以被截断，但计数必须完整可见 -->
     <Style x:Key="FilterChip" TargetType="RadioButton">
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Foreground" Value="{StaticResource PanelForegroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PanelForegroundBrush}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
                     <Border x:Name="Pill" CornerRadius="11" Padding="9,3" BorderThickness="0.5"
-                            Background="Transparent" BorderBrush="{StaticResource HairlineBrush}">
+                            Background="Transparent" BorderBrush="{DynamicResource HairlineBrush}">
                         <ContentPresenter VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Pill" Property="Background" Value="{StaticResource RowHoverBrush}" />
+                            <Setter TargetName="Pill" Property="Background" Value="{DynamicResource RowHoverBrush}" />
                         </Trigger>
                         <!-- 选中态用系统强调色底 + 描边，符合 Windows 原生观感 -->
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Pill" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            <Setter TargetName="Pill" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -71,13 +71,13 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="FontSize" Value="12" />
-        <Setter Property="Foreground" Value="{StaticResource PanelForegroundBrush}" />
-        <Setter Property="CaretBrush" Value="{StaticResource PanelForegroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PanelForegroundBrush}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource PanelForegroundBrush}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
-                    <Border Background="{StaticResource FieldBackgroundBrush}" CornerRadius="7"
-                            BorderThickness="0.5" BorderBrush="{StaticResource HairlineBrush}">
+                    <Border Background="{DynamicResource FieldBackgroundBrush}" CornerRadius="7"
+                            BorderThickness="0.5" BorderBrush="{DynamicResource HairlineBrush}">
                         <ScrollViewer x:Name="PART_ContentHost" Margin="6,4" VerticalAlignment="Center" />
                     </Border>
                 </ControlTemplate>
@@ -101,7 +101,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Box" Property="Background" Value="{StaticResource RowHoverBrush}" />
+                            <Setter TargetName="Box" Property="Background" Value="{DynamicResource RowHoverBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -113,8 +113,8 @@
     <Style x:Key="Card" TargetType="Border">
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="BorderThickness" Value="0.5" />
-        <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}" />
-        <Setter Property="Background" Value="{StaticResource PanelBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}" />
+        <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
         <Setter Property="Padding" Value="14,10" />
         <Setter Property="Margin" Value="0,0,0,14" />
     </Style>
@@ -123,13 +123,13 @@
         <Setter Property="FontSize" Value="12" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Margin" Value="2,0,0,7" />
-        <Setter Property="Foreground" Value="{StaticResource PanelForegroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PanelForegroundBrush}" />
     </Style>
 
     <Style x:Key="HintText" TargetType="TextBlock">
         <Setter Property="FontSize" Value="11" />
         <Setter Property="TextWrapping" Value="Wrap" />
-        <Setter Property="Foreground" Value="{StaticResource SecondaryTextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
     </Style>
 
     <!-- 继承隐式 TextBox 样式（Widgets.xaml 里的 Win11 外壳），只覆盖这几项；
@@ -143,8 +143,8 @@
 
     <!-- 主按钮：用系统强调色，Windows 原生观感 -->
     <Style x:Key="AccentButtonStyle" TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource AccentTextBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FontSize" Value="12" />
@@ -172,7 +172,7 @@
         <Setter Property="Width" Value="34" />
         <Setter Property="Height" Value="34" />
         <Setter Property="Stretch" Value="Uniform" />
-        <Setter Property="Fill" Value="{StaticResource TertiaryTextBrush}" />
+        <Setter Property="Fill" Value="{DynamicResource TertiaryTextBrush}" />
         <Setter Property="Margin" Value="0,0,0,10" />
     </Style>
 
